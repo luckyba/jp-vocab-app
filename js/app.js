@@ -1,4 +1,62 @@
-/***********************
+    /***********************
+     * i18n
+     ***********************/
+    const STORAGE_KEY_LANG = "jp_vocab_app_lang";
+    const DEFAULT_LANG = document.documentElement.getAttribute("lang") || "en";
+    let i18n = {};
+
+    function t(key, fallback = "") {
+      return i18n[key] ?? fallback ?? key;
+    }
+    function tf(key, vars = {}, fallback = "") {
+      let msg = t(key, fallback);
+      for (const [k, v] of Object.entries(vars)) {
+        msg = msg.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+      }
+      return msg;
+    }
+    async function loadI18n(lang) {
+      const target = lang || loadFromStorage(STORAGE_KEY_LANG, DEFAULT_LANG);
+      const inline = window.I18N && window.I18N[target];
+      if (inline) {
+        i18n = inline;
+        saveToStorage(STORAGE_KEY_LANG, target);
+        applyI18n(target);
+        return target;
+      }
+      try {
+        const res = await fetch(`lang/${target}.json`);
+        if (!res.ok) throw new Error("i18n load failed");
+        i18n = await res.json();
+        saveToStorage(STORAGE_KEY_LANG, target);
+        applyI18n(target);
+        return target;
+      } catch {
+        if (target !== "en") return loadI18n("en");
+        applyI18n("en");
+        return "en";
+      }
+    }
+    function applyI18n(lang) {
+      document.querySelectorAll("[data-i18n]").forEach(elm => {
+        const key = elm.getAttribute("data-i18n");
+        const fallback = elm.textContent || "";
+        elm.textContent = t(key, fallback);
+      });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(elm => {
+        const key = elm.getAttribute("data-i18n-placeholder");
+        const fallback = elm.getAttribute("placeholder") || "";
+        elm.setAttribute("placeholder", t(key, fallback));
+      });
+      if (lang) {
+        document.documentElement.setAttribute("lang", lang);
+        const select = document.getElementById("langSelect");
+        if (select) select.value = lang;
+      }
+      document.title = t("app_title", document.title);
+    }
+
+    /***********************
      * Storage
      ***********************/
     const STORAGE_KEY_DATA = "jp_vocab_app_data_v2";
@@ -41,14 +99,19 @@
       let decks = [];
       if (raw && Array.isArray(raw.decks)) decks = raw.decks;
       else if (raw && Array.isArray(raw.items)) {
-        decks = [{ id: raw.id || "default", title: raw.title || "Deck", description: raw.description || "", items: raw.items }];
+        decks = [{
+          id: raw.id || "default",
+          title: raw.title || t("default_deck_single", "Deck"),
+          description: raw.description || "",
+          items: raw.items
+        }];
       } else decks = [];
 
       decks = decks
         .filter(d => d && Array.isArray(d.items))
         .map((d, idx) => ({
           id: String(d.id ?? `deck_${idx+1}`),
-          title: String(d.title ?? `Deck ${idx+1}`),
+          title: String(d.title ?? tf("default_deck_title", { n: idx + 1 }, `Deck ${idx+1}`)),
           description: String(d.description ?? ""),
           items: d.items
             .filter(it => it && (it.jp || it.vi))
@@ -132,7 +195,7 @@
     // Accept:
     //  - {items:[...]}
     //  - [...]
-    //  - {decks:[{items:[...]}]} (lấy deck đầu)
+    //  - {decks:[{items:[...]}]} (take first deck)
     function extractImportItems(parsed) {
       let items = [];
       if (Array.isArray(parsed)) items = parsed;
@@ -161,6 +224,7 @@
       searchInput: document.getElementById("searchInput"),
       modeSelect: document.getElementById("modeSelect"),
       quizType: document.getElementById("quizType"),
+      langSelect: document.getElementById("langSelect"),
 
       statTotal: document.getElementById("statTotal"),
       statKnown: document.getElementById("statKnown"),
@@ -228,7 +292,7 @@
       if (!decks.length) {
         const opt = document.createElement("option");
         opt.value = "";
-        opt.textContent = "— Chưa có deck —";
+        opt.textContent = t("no_deck", "-- No deck --");
         el.deckSelect.appendChild(opt);
         el.deckSelect.disabled = true;
       } else {
@@ -248,7 +312,7 @@
       if (!decks.length) {
         const opt = document.createElement("option");
         opt.value = "";
-        opt.textContent = "— Chưa có chủ đề —";
+        opt.textContent = t("no_deck_import", "-- No deck --");
         el.importDeckSelect.appendChild(opt);
         el.importDeckSelect.disabled = true;
       } else {
@@ -318,6 +382,8 @@
         return;
       }
 
+      const emptyValue = t("empty_value", "-");
+      const tagsSep = t("card_tags_sep", " - ");
       items.forEach((it, idx) => {
         const slide = document.createElement("div");
         slide.className = "swiper-slide";
@@ -326,31 +392,31 @@
             <div class="flip-card">
               <div class="flip-face flip-front">
                 <div class="card-top">
-                  <span class="chip"><i class="bi bi-lightning-fill text-primary"></i> Front</span>
+                  <span class="chip"><i class="bi bi-lightning-fill text-primary"></i> ${escapeHTML(t("card_front", "Front"))}</span>
                   <span class="chip"><i class="bi bi-hash"></i> ${idx+1}</span>
                 </div>
                 <div class="card-mid">
-                  <div class="jp">${escapeHTML(state.mode === "jp_to_vi" ? (it.jp || "—") : (it.vi || "—"))}</div>
+                  <div class="jp">${escapeHTML(state.mode === "jp_to_vi" ? (it.jp || emptyValue) : (it.vi || emptyValue))}</div>
                   ${state.mode === "jp_to_vi"
                     ? (it.reading ? `<div class="reading">${escapeHTML(it.reading)}</div>` : ``)
                     : (it.jp ? `<div class="reading">${escapeHTML(it.reading ? `${it.jp}（${it.reading}）` : it.jp)}</div>` : ``)
                   }
-                  <div class="hint">Bấm để lật</div>
+                  <div class="hint">${escapeHTML(t("card_hint_flip", "Tap to flip"))}</div>
                 </div>
                 <div class="card-bot">
-                  <span class="small-muted">${escapeHTML((it.tags||[]).slice(0,3).join(" • "))}</span>
+                  <span class="small-muted">${escapeHTML((it.tags||[]).slice(0,3).join(tagsSep))}</span>
                   <span class="small-muted"><i class="bi bi-space-bar"></i> Space</span>
                 </div>
               </div>
 
               <div class="flip-face flip-back">
                 <div class="card-top">
-                  <span class="chip"><i class="bi bi-stars text-success"></i> Back</span>
+                  <span class="chip"><i class="bi bi-stars text-success"></i> ${escapeHTML(t("card_back", "Back"))}</span>
                   <span class="chip"><i class="bi bi-tag"></i> ${escapeHTML(it.id)}</span>
                 </div>
 
                 <div class="card-mid">
-                  <div class="meaning">${escapeHTML(state.mode === "jp_to_vi" ? (it.vi || "—") : (it.jp || "—"))}</div>
+                  <div class="meaning">${escapeHTML(state.mode === "jp_to_vi" ? (it.vi || emptyValue) : (it.jp || emptyValue))}</div>
                   ${state.mode === "jp_to_vi"
                     ? (it.jp ? `<div class="reading">${escapeHTML(it.reading ? `${it.jp}（${it.reading}）` : it.jp)}</div>` : ``)
                     : (it.vi ? `<div class="reading">${escapeHTML(it.vi)}</div>` : ``)
@@ -431,11 +497,11 @@
     }
     function renderExampleHint(it) {
       const ex = (it.examples || [])[0];
-      if (!ex || !ex.jp) return `<div class="hint">Mẹo: thêm examples trong JSON để hiện câu ví dụ</div>`;
+      if (!ex || !ex.jp) return `<div class="hint">${escapeHTML(t("hint_add_examples", "Tip: add examples in JSON to show sample sentences."))}</div>`;
       const vi = ex.vi ? `<div class="small-muted mt-1">${escapeHTML(ex.vi)}</div>` : "";
       return `
         <div class="mt-2 w-100" style="max-width: 720px;">
-          <div class="hint"><i class="bi bi-quote"></i> Ví dụ</div>
+          <div class="hint"><i class="bi bi-quote"></i> ${escapeHTML(t("hint_example", "Example"))}</div>
           <div class="mt-1" style="font-weight:700">${escapeHTML(ex.jp)}</div>
           ${vi}
         </div>
@@ -475,12 +541,15 @@
       const answerItem = items[Math.floor(Math.random() * items.length)];
       const mode = state.mode;
 
-      const prompt = (mode === "jp_to_vi") ? (answerItem.jp || "—") : (answerItem.vi || "—");
+      const emptyValue = t("empty_value", "-");
+      const prompt = (mode === "jp_to_vi") ? (answerItem.jp || emptyValue) : (answerItem.vi || emptyValue);
       const answer = (mode === "jp_to_vi") ? (answerItem.vi || "") : (answerItem.jp || "");
 
       state.currentQuiz = { mode, answerItem, prompt, answer };
 
-      el.quizMeta.textContent = `${deck.title} • ${mode === "jp_to_vi" ? "JP→VI" : "VI→JP"} • ${state.quizType === "mc" ? "Trắc nghiệm" : "Gõ đáp án"}`;
+      const metaMode = mode === "jp_to_vi" ? t("quiz_meta_jp_to_vi", "JP->VI") : t("quiz_meta_vi_to_jp", "VI->JP");
+      const metaType = state.quizType === "mc" ? t("quiz_meta_mc", "Multiple choice") : t("quiz_meta_type", "Type answer");
+      el.quizMeta.textContent = `${deck.title} - ${metaMode} - ${metaType}`;
       el.quizPrompt.textContent = prompt;
       el.quizHint.classList.add("d-none");
       el.quizHint.textContent = "";
@@ -499,7 +568,8 @@
 
       el.quizOptions.innerHTML = "";
       options.forEach(opt => {
-        const text = (mode === "jp_to_vi") ? (opt.vi || "—") : (opt.jp || "—");
+        const emptyValue = t("empty_value", "-");
+        const text = (mode === "jp_to_vi") ? (opt.vi || emptyValue) : (opt.jp || emptyValue);
         const btn = document.createElement("button");
         btn.className = "option-btn";
         btn.type = "button";
@@ -542,8 +612,8 @@
 
       el.quizHint.classList.remove("d-none");
       el.quizHint.innerHTML = `
-        <div><b>Đáp án:</b> ${escapeHTML(mode === "jp_to_vi" ? answerItem.vi : answerItem.jp)}</div>
-        ${(mode === "vi_to_jp" && answerItem.reading) ? `<div class="small-muted">読み方: ${escapeHTML(answerItem.reading)}</div>` : ``}
+        <div><b>${escapeHTML(t("answer_label", "Answer"))}:</b> ${escapeHTML(mode === "jp_to_vi" ? answerItem.vi : answerItem.jp)}</div>
+        ${(mode === "vi_to_jp" && answerItem.reading) ? `<div class="small-muted">${escapeHTML(t("reading_label", "Reading"))}: ${escapeHTML(answerItem.reading)}</div>` : ``}
       `;
     }
 
@@ -564,15 +634,15 @@
       if (ok) {
         state.score.right++;
         mark(getDeck().id, q.answerItem.id, "known");
-        el.typeFeedback.innerHTML = `<div class="alert alert-success py-2 mb-0"><b>Đúng!</b> ${escapeHTML(correct)}</div>`;
+        el.typeFeedback.innerHTML = `<div class="alert alert-success py-2 mb-0"><b>${escapeHTML(t("feedback_correct", "Correct!"))}</b> ${escapeHTML(correct)}</div>`;
         celebrate();
       } else {
         state.score.wrong++;
         mark(getDeck().id, q.answerItem.id, "learning");
         el.typeFeedback.innerHTML = `
           <div class="alert alert-danger py-2 mb-0">
-            <b>Sai.</b> Đáp án đúng: <b>${escapeHTML(correct)}</b>
-            ${(q.mode === "vi_to_jp" && q.answerItem.reading) ? `<div class="small-muted">読み方: ${escapeHTML(q.answerItem.reading)}</div>` : ``}
+            <b>${escapeHTML(t("feedback_wrong", "Wrong."))}</b> ${escapeHTML(t("answer_label", "Answer"))}: <b>${escapeHTML(correct)}</b>
+            ${(q.mode === "vi_to_jp" && q.answerItem.reading) ? `<div class="small-muted">${escapeHTML(t("reading_label", "Reading"))}: ${escapeHTML(q.answerItem.reading)}</div>` : ``}
           </div>
         `;
       }
@@ -584,8 +654,8 @@
       if (!q) return;
       el.typeFeedback.innerHTML = `
         <div class="alert alert-secondary py-2 mb-0">
-          Đáp án: <b>${escapeHTML(q.answer)}</b>
-          ${(q.mode === "vi_to_jp" && q.answerItem.reading) ? `<div class="small-muted">読み方: ${escapeHTML(q.answerItem.reading)}</div>` : ``}
+          ${escapeHTML(t("answer_label", "Answer"))}: <b>${escapeHTML(q.answer)}</b>
+          ${(q.mode === "vi_to_jp" && q.answerItem.reading) ? `<div class="small-muted">${escapeHTML(t("reading_label", "Reading"))}: ${escapeHTML(q.answerItem.reading)}</div>` : ``}
         </div>
       `;
     }
@@ -703,6 +773,16 @@
       renderQuizArea();
     });
 
+    if (el.langSelect) {
+      el.langSelect.addEventListener("change", async () => {
+        await loadI18n(el.langSelect.value);
+        renderDeckSelect();
+        renderStats();
+        renderFlashcards();
+        renderQuizArea();
+      });
+    }
+
     el.btnPrev.addEventListener("click", () => state.swiper?.slidePrev());
     el.btnNext.addEventListener("click", () => state.swiper?.slideNext());
 
@@ -752,7 +832,7 @@
     el.btnResetProgress.addEventListener("click", () => {
       const deck = getDeck();
       if (!deck) return;
-      if (!confirm("Reset tiến độ (Nhớ/Chưa nhớ) cho chủ đề hiện tại?")) return;
+      if (!confirm(t("confirm_reset_progress", "Reset progress (Known/Learning) for the current deck?"))) return;
       state.progress[deck.id] = { known: [], learning: [] };
       saveToStorage(STORAGE_KEY_PROGRESS, state.progress);
       renderStats();
@@ -785,8 +865,8 @@
       // sample quick-import items
       el.jsonTextarea.value = JSON.stringify({
         items: [
-          { jp: "フロントガラス", reading: "", vi: "kính chắn gió", tags: ["oto"] },
-          { jp: "ワイパー", reading: "", vi: "cần gạt nước", tags: ["oto"] }
+          { jp: "フロントガラス", reading: "", vi: "windshield", tags: ["oto"] },
+          { jp: "ワイパー", reading: "", vi: "wiper", tags: ["oto"] }
         ]
       }, null, 2);
       el.jsonError.classList.add("d-none");
@@ -805,7 +885,7 @@
       const deck = state.data.decks.find(d => d.id === deckId);
       if (!deck) return;
 
-      if (!confirm(`Xóa chủ đề "${deck.title}"? (Sẽ xóa cả tiến độ của chủ đề này)`)) return;
+      if (!confirm(tf("confirm_delete_deck", { title: deck.title }, `Delete deck "${deck.title}"? (This will also remove its progress)`))) return;
 
       state.data.decks = state.data.decks.filter(d => d.id !== deckId);
       delete state.progress[deckId];
@@ -827,14 +907,14 @@
       const parsed = safeJSONParse(raw);
 
       if (!parsed.ok) {
-        el.jsonError.textContent = "JSON không hợp lệ: " + parsed.error.message;
+        el.jsonError.textContent = tf("json_error_invalid", { error: parsed.error.message }, "Invalid JSON: {error}");
         el.jsonError.classList.remove("d-none");
         return;
       }
 
       const importItems = extractImportItems(parsed.value);
       if (!importItems.length) {
-        el.jsonError.textContent = "JSON hợp lệ nhưng không tìm thấy items. Dùng {items:[...]} hoặc mảng [...].";
+        el.jsonError.textContent = t("json_error_no_items", "Valid JSON but no items found. Use {items:[...]} or an array.");
         el.jsonError.classList.remove("d-none");
         return;
       }
@@ -845,7 +925,7 @@
         const deckId = el.importDeckSelect.value || state.deckId;
         const deck = state.data.decks.find(d => d.id === deckId);
         if (!deck) {
-          el.jsonError.textContent = "Không có chủ đề để append. Hãy chọn 'Tạo chủ đề mới'.";
+          el.jsonError.textContent = t("json_error_no_deck_append", "No deck to append to. Choose \"Create new deck\".");
           el.jsonError.classList.remove("d-none");
           return;
         }
@@ -855,7 +935,7 @@
       } else {
         const title = (el.newDeckTitle.value || "").trim();
         if (!title) {
-          el.jsonError.textContent = "Bạn chưa nhập Title cho chủ đề mới.";
+          el.jsonError.textContent = t("json_error_title_required", "You have not entered a title for the new deck.");
           el.jsonError.classList.remove("d-none");
           return;
         }
@@ -904,4 +984,9 @@
     /***********************
      * Start
      ***********************/
-    loadInitialData();
+    async function startApp() {
+      await loadI18n();
+      loadInitialData();
+    }
+
+    startApp();

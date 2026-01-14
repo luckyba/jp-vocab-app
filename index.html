@@ -1,0 +1,1406 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Học Từ Vựng Nhật – Flashcards & Quiz (1 file)</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Swiper -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root{
+      --shadow: 0 12px 30px rgba(0,0,0,.10);
+      --card-radius: 20px;
+      --soft: rgba(13,110,253,.08);
+    }
+    body{ background: linear-gradient(180deg,#f7f9ff 0%, #f7f7fb 55%, #ffffff 100%); }
+    .app-shell { max-width: 1080px; }
+
+    .brand-badge{
+      background: var(--soft);
+      border: 1px solid rgba(13,110,253,.15);
+      border-radius: 999px;
+      padding: .45rem .75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      font-weight: 700;
+    }
+    .panel{
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      background: #fff;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    .stat{
+      border-radius: 18px;
+      border: 1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.8);
+      padding: 10px 12px;
+    }
+    .small-muted{ color: rgba(0,0,0,.55); }
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      border: 1px solid rgba(0,0,0,.16);
+      border-bottom-width: 2px;
+      padding: .1rem .4rem;
+      border-radius: .4rem;
+      font-size: .85em;
+      background: #fff;
+    }
+
+    /* Flashcard flip */
+    .flip-wrap{
+      width: 100%;
+      height: 320px;
+      perspective: 1400px;
+      border-radius: var(--card-radius);
+    }
+    .flip-card{
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform .55s cubic-bezier(.2,.85,.2,1);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow);
+    }
+    .flip-wrap.is-flipped .flip-card{ transform: rotateY(180deg); }
+    .flip-face{
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      display:flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid rgba(0,0,0,.06);
+      background: #fff;
+    }
+    .flip-front{
+      background: radial-gradient(1200px 420px at 20% 0%, rgba(13,110,253,.20), transparent 55%),
+                  radial-gradient(1200px 420px at 90% 20%, rgba(108,117,125,.14), transparent 55%),
+                  #ffffff;
+    }
+    .flip-back{
+      transform: rotateY(180deg);
+      background: radial-gradient(1200px 420px at 10% 10%, rgba(25,135,84,.18), transparent 60%),
+                  radial-gradient(1200px 420px at 90% 20%, rgba(13,110,253,.10), transparent 55%),
+                  #ffffff;
+    }
+    .card-top{
+      padding: 18px 18px 10px;
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom: 1px dashed rgba(0,0,0,.10);
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:.4rem;
+      font-size: .85rem;
+      padding: .28rem .6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,.10);
+      background: rgba(255,255,255,.65);
+    }
+    .card-mid{
+      padding: 18px;
+      display:flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-align:center;
+      flex: 1;
+    }
+    .jp{
+      font-weight: 800;
+      font-size: clamp(1.4rem, 2.8vw, 2.1rem);
+      letter-spacing: .02em;
+    }
+    .reading{
+      font-size: 1rem;
+      color: rgba(0,0,0,.65);
+    }
+    .meaning{
+      font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+      font-weight: 800;
+    }
+    .hint{ color: rgba(0,0,0,.55); font-size: .95rem; }
+    .card-bot{
+      padding: 14px 18px;
+      border-top: 1px dashed rgba(0,0,0,.10);
+      display:flex; justify-content:space-between; align-items:center;
+    }
+
+    /* Swiper layout */
+    .swiper{
+      padding: 14px 14px 54px; /* chừa chỗ cho pagination/scrollbar */
+    }
+    #cardSwiper { padding-bottom: 56px; }
+
+    /* Desktop: fraction */
+    .swiper-pagination-fraction{
+      bottom: 30px !important;
+      font-weight: 800;
+      color: rgba(0,0,0,.65);
+    }
+    /* Mobile: progressbar (đặt thấp xuống) */
+    .swiper-pagination-progressbar{
+      height: 6px !important;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(0,0,0,.08);
+      bottom: 34px !important;
+      top: auto !important;
+    }
+    .swiper-pagination-progressbar .swiper-pagination-progressbar-fill{
+      background: rgba(13,110,253,.55);
+      border-radius: 999px;
+    }
+    /* Scrollbar draggable */
+    .swiper-scrollbar{
+      height: 8px !important;
+      border-radius: 999px;
+      background: rgba(0,0,0,.08);
+      bottom: 10px !important;
+      top: auto !important;
+    }
+    .swiper-scrollbar-drag{
+      border-radius: 999px;
+      background: rgba(13,110,253,.55);
+    }
+
+    /* Quiz options */
+    .option-btn{
+      border-radius: 16px;
+      padding: .9rem 1rem;
+      border: 1px solid rgba(0,0,0,.10);
+      background: #fff;
+      transition: transform .08s ease, box-shadow .2s ease, border-color .2s ease;
+      text-align:left;
+    }
+    .option-btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+      border-color: rgba(13,110,253,.25);
+    }
+    .option-btn.correct{ border-color: rgba(25,135,84,.7); background: rgba(25,135,84,.08); }
+    .option-btn.wrong{ border-color: rgba(220,53,69,.7); background: rgba(220,53,69,.08); }
+  </style>
+</head>
+
+<body>
+  <div class="container py-4 app-shell">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <div class="brand-badge">
+          <i class="bi bi-journal-bookmark-fill text-primary"></i>
+          <span>Học Từ Vựng Nhật</span>
+        </div>
+        <span class="small text-secondary">Flashcards + Quiz • Import/Export</span>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#dataModal">
+          <i class="bi bi-braces"></i> Import/Quản lý
+        </button>
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-download"></i> Export
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" id="btnExportData"><i class="bi bi-file-earmark-code"></i> Export Data (decks/items)</button></li>
+            <li><button class="dropdown-item" id="btnExportAll"><i class="bi bi-file-earmark-zip"></i> Export Data + Progress</button></li>
+          </ul>
+        </div>
+        <button id="btnShuffle" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-shuffle"></i> Xáo trộn
+        </button>
+        <button id="btnResetProgress" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-arrow-counterclockwise"></i> Reset tiến độ
+        </button>
+      </div>
+    </div>
+
+    <!-- Top controls -->
+    <div class="panel p-3 mb-3">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-lg-4">
+          <label class="form-label fw-semibold">Chủ đề (Deck)</label>
+          <select id="deckSelect" class="form-select"></select>
+          <div class="form-text small-muted">
+            <span class="kbd">Space</span> lật • <span class="kbd">←</span>/<span class="kbd">→</span> chuyển • kéo thanh dưới để nhảy nhanh
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <label class="form-label fw-semibold">Tìm kiếm</label>
+          <input id="searchInput" class="form-control" placeholder="Nhập JP/Kana/Việt/tags để lọc...">
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <div class="d-flex gap-2">
+            <div class="flex-grow-1">
+              <label class="form-label fw-semibold">Hiển thị</label>
+              <select id="modeSelect" class="form-select">
+                <option value="jp_to_vi">JP → VI</option>
+                <option value="vi_to_jp">VI → JP</option>
+              </select>
+            </div>
+            <div class="flex-grow-1">
+              <label class="form-label fw-semibold">Quiz</label>
+              <select id="quizType" class="form-select">
+                <option value="mc">Trắc nghiệm</option>
+                <option value="type">Gõ đáp án</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <span class="stat"><i class="bi bi-collection-fill text-primary"></i> Tổng: <b id="statTotal">0</b></span>
+              <span class="stat"><i class="bi bi-check2-circle text-success"></i> Đã nhớ: <b id="statKnown">0</b></span>
+              <span class="stat"><i class="bi bi-hourglass-split text-warning"></i> Đang học: <b id="statLearning">0</b></span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+              <button id="btnFlash" class="btn btn-primary">
+                <i class="bi bi-cards"></i> Flashcards
+              </button>
+              <button id="btnQuiz" class="btn btn-outline-primary">
+                <i class="bi bi-ui-checks"></i> Kiểm tra
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="row g-3">
+      <!-- Flashcards -->
+      <div class="col-12 col-lg-7">
+        <div class="panel p-3 h-100">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div>
+              <div class="fw-bold fs-5">Flashcards</div>
+              <div class="small-muted">Bấm vào card để lật. Đánh dấu “Nhớ / Chưa nhớ”.</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button id="btnPrev" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chevron-left"></i></button>
+              <button id="btnNext" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chevron-right"></i></button>
+            </div>
+          </div>
+
+          <div id="flashEmpty" class="alert alert-warning d-none mb-0">
+            Chưa có dữ liệu. Bấm <b>Import/Quản lý</b> để nạp JSON.
+          </div>
+
+          <div id="flashArea" class="d-none">
+            <div class="swiper" id="cardSwiper">
+              <div class="swiper-wrapper" id="swiperWrapper"></div>
+              <div class="swiper-pagination"></div>
+              <div class="swiper-scrollbar"></div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+              <div class="small-muted">Card <b id="cardIndex">0</b>/<b id="cardCount">0</b></div>
+              <div class="d-flex flex-wrap gap-2">
+                <button id="btnMarkLearning" class="btn btn-outline-warning"><i class="bi bi-book"></i> Chưa nhớ</button>
+                <button id="btnMarkKnown" class="btn btn-success"><i class="bi bi-check2"></i> Nhớ rồi</button>
+                <button id="btnSpeak" class="btn btn-outline-secondary"><i class="bi bi-volume-up"></i> Nghe</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Quiz -->
+      <div class="col-12 col-lg-5">
+        <div class="panel p-3 h-100">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div>
+              <div class="fw-bold fs-5">Kiểm tra</div>
+              <div class="small-muted">Trắc nghiệm hoặc gõ đáp án.</div>
+            </div>
+            <button id="btnNewQuestion" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-repeat"></i> Câu mới
+            </button>
+          </div>
+
+          <div id="quizEmpty" class="alert alert-warning d-none mb-0">
+            Không có dữ liệu quiz. Hãy import JSON và chọn chủ đề.
+          </div>
+
+          <div id="quizArea" class="d-none">
+            <div class="mb-2">
+              <span class="chip"><i class="bi bi-patch-question-fill text-primary"></i> <span id="quizMeta">—</span></span>
+            </div>
+
+            <div class="p-3" style="border-radius:18px;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.75)">
+              <div class="small-muted mb-1">Câu hỏi</div>
+              <div id="quizPrompt" class="fw-bold" style="font-size:1.2rem;">—</div>
+              <div id="quizHint" class="hint mt-2 d-none"></div>
+            </div>
+
+            <div class="mt-3">
+              <div id="quizMC" class="d-none">
+                <div class="d-grid gap-2" id="quizOptions"></div>
+              </div>
+
+              <div id="quizTypeBox" class="d-none">
+                <label class="form-label fw-semibold">Nhập đáp án</label>
+                <input id="typeInput" class="form-control" placeholder="Gõ đáp án rồi Enter...">
+                <div class="d-flex gap-2 mt-2">
+                  <button id="btnTypeSubmit" class="btn btn-primary"><i class="bi bi-send-check"></i> Trả lời</button>
+                  <button id="btnTypeShow" class="btn btn-outline-secondary"><i class="bi bi-eye"></i> Xem đáp án</button>
+                </div>
+                <div id="typeFeedback" class="mt-2"></div>
+              </div>
+            </div>
+
+            <hr class="my-3">
+
+            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+              <div class="d-flex gap-2">
+                <span class="stat"><i class="bi bi-bar-chart-fill text-primary"></i> Đúng: <b id="scoreRight">0</b></span>
+                <span class="stat"><i class="bi bi-x-circle-fill text-danger"></i> Sai: <b id="scoreWrong">0</b></span>
+              </div>
+              <button id="btnQuizSpeak" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-volume-up"></i> Nghe câu hỏi
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <footer class="py-4 text-center small text-secondary">
+      1 file HTML • localStorage • Import append/create • Export backup
+    </footer>
+  </div>
+
+  <!-- Modal: Import/Manage -->
+  <div class="modal fade" id="dataModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content" style="border-radius: 18px;">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title">Import / Quản lý chủ đề</h5>
+            <div class="small text-secondary">
+              Import sẽ <b>thêm</b> dữ liệu, không ghi đè. Bạn có thể append vào chủ đề cũ hoặc tạo chủ đề mới.
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-lg-5">
+              <label class="form-label fw-semibold">Chế độ import</label>
+              <select id="importMode" class="form-select">
+                <option value="append_existing">Thêm vào chủ đề có sẵn (append)</option>
+                <option value="create_new">Tạo chủ đề mới (theo title)</option>
+              </select>
+              <div class="form-text">Không ghi đè dữ liệu cũ.</div>
+            </div>
+
+            <div class="col-12 col-lg-7">
+              <label class="form-label fw-semibold">Chọn chủ đề (khi append)</label>
+              <select id="importDeckSelect" class="form-select"></select>
+              <div class="form-text">Chỉ dùng khi chọn “append”.</div>
+            </div>
+
+            <div class="col-12 col-lg-7">
+              <label class="form-label fw-semibold">Title chủ đề mới (khi tạo mới)</label>
+              <input id="newDeckTitle" class="form-control" placeholder="VD: Lái xe ô tô, Nhà hàng, Công ty..." />
+              <div class="form-text">Chỉ dùng khi chọn “tạo mới”.</div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+              <label class="form-label fw-semibold">Quản lý chủ đề</label>
+              <button id="btnDeleteSelectedDeck" class="btn btn-outline-danger w-100" type="button">
+                <i class="bi bi-trash3"></i> Xóa chủ đề đang chọn
+              </button>
+            </div>
+          </div>
+
+          <div class="alert alert-info">
+            <b>JSON import khuyến nghị</b> (không cần id):
+            <pre class="mb-0 small"><code>{
+  "items": [
+    { "jp": "フロントガラス", "reading": "", "vi": "kính chắn gió", "tags": ["oto"] },
+    { "jp": "ワイパー", "vi": "cần gạt nước" }
+  ]
+}</code></pre>
+          </div>
+
+          <label class="form-label fw-semibold">JSON</label>
+          <textarea id="jsonTextarea" class="form-control" rows="12" spellcheck="false"></textarea>
+
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            <button id="btnLoadSample" class="btn btn-outline-secondary btn-sm" type="button">
+              <i class="bi bi-file-earmark-text"></i> Nạp mẫu
+            </button>
+            <button id="btnClearJSON" class="btn btn-outline-danger btn-sm" type="button">
+              <i class="bi bi-trash3"></i> Xóa
+            </button>
+          </div>
+
+          <div id="jsonError" class="alert alert-danger d-none mt-3 mb-0"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button id="btnApplyJSON" type="button" class="btn btn-primary">
+            <i class="bi bi-check2-circle"></i> Import (Thêm dữ liệu)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  <script>
+    /***********************
+     * Storage
+     ***********************/
+    const STORAGE_KEY_DATA = "jp_vocab_app_data_v2";
+    const STORAGE_KEY_PROGRESS = "jp_vocab_app_progress_v2";
+
+    function safeJSONParse(str) {
+      try { return { ok: true, value: JSON.parse(str) }; }
+      catch (e) { return { ok: false, error: e }; }
+    }
+    function loadFromStorage(key, fallback=null) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        return JSON.parse(raw);
+      } catch { return fallback; }
+    }
+    function saveToStorage(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    /***********************
+     * State
+     ***********************/
+    const state = {
+      data: { decks: [] },
+      deckId: null,
+      filteredItems: [],
+      mode: "jp_to_vi",
+      quizType: "mc",
+      progress: loadFromStorage(STORAGE_KEY_PROGRESS, {}),
+      score: { right: 0, wrong: 0 },
+      currentQuiz: null,
+      swiper: null
+    };
+
+    /***********************
+     * Data normalization (flexible but clean)
+     ***********************/
+    function normalizeData(raw) {
+      let decks = [];
+      if (raw && Array.isArray(raw.decks)) decks = raw.decks;
+      else if (raw && Array.isArray(raw.items)) {
+        decks = [{ id: raw.id || "default", title: raw.title || "Deck", description: raw.description || "", items: raw.items }];
+      } else decks = [];
+
+      decks = decks
+        .filter(d => d && Array.isArray(d.items))
+        .map((d, idx) => ({
+          id: String(d.id ?? `deck_${idx+1}`),
+          title: String(d.title ?? `Deck ${idx+1}`),
+          description: String(d.description ?? ""),
+          items: d.items
+            .filter(it => it && (it.jp || it.vi))
+            .map((it, j) => ({
+              id: String(it.id ?? `${String(d.id ?? `deck_${idx+1}`)}_${String(j+1).padStart(3,"0")}`),
+              jp: String(it.jp ?? ""),
+              reading: String(it.reading ?? ""),
+              vi: String(it.vi ?? ""),
+              tags: Array.isArray(it.tags) ? it.tags.map(String) : [],
+              examples: Array.isArray(it.examples) ? it.examples.map(ex => ({
+                jp: String(ex.jp ?? ""),
+                vi: String(ex.vi ?? "")
+              })) : []
+            }))
+        }));
+
+      return { decks };
+    }
+
+    function getDeck() {
+      return state.data.decks.find(d => d.id === state.deckId) || null;
+    }
+
+    function ensureProgressDeck(deckId) {
+      if (!state.progress[deckId]) state.progress[deckId] = { known: [], learning: [] };
+      state.progress[deckId].known = [...new Set(state.progress[deckId].known)];
+      state.progress[deckId].learning = [...new Set(state.progress[deckId].learning)];
+    }
+
+    function mark(deckId, itemId, status) {
+      ensureProgressDeck(deckId);
+      const p = state.progress[deckId];
+      const known = new Set(p.known);
+      const learning = new Set(p.learning);
+
+      if (status === "known") { known.add(itemId); learning.delete(itemId); }
+      else if (status === "learning") { learning.add(itemId); known.delete(itemId); }
+      else if (status === "clear") { known.delete(itemId); learning.delete(itemId); }
+
+      state.progress[deckId] = { known: [...known], learning: [...learning] };
+      saveToStorage(STORAGE_KEY_PROGRESS, state.progress);
+      renderStats();
+      renderCardFooterButtons();
+    }
+    function isKnown(deckId, itemId) { ensureProgressDeck(deckId); return state.progress[deckId].known.includes(itemId); }
+    function isLearning(deckId, itemId) { ensureProgressDeck(deckId); return state.progress[deckId].learning.includes(itemId); }
+
+    /***********************
+     * Auto ID + Import helpers
+     ***********************/
+    function nextItemId(deck) {
+      const re = /_(\d+)$/;
+      let maxN = 0;
+      for (const it of (deck.items || [])) {
+        const m = String(it.id || "").match(re);
+        if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
+      }
+      const n = maxN + 1;
+      const prefix = deck.id;
+      return `${prefix}_${String(n).padStart(3, "0")}`;
+    }
+
+    function slugifyId(s) {
+      return String(s || "deck")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s]+/g, "_")
+        .replace(/[^\w\u00C0-\u024f_]+/g, "")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "") || "deck";
+    }
+
+    function makeUniqueDeckId(baseId) {
+      const existing = new Set(state.data.decks.map(d => d.id));
+      let id = baseId;
+      let i = 2;
+      while (existing.has(id)) id = `${baseId}_${i++}`;
+      return id;
+    }
+
+    // Accept:
+    //  - {items:[...]}
+    //  - [...]
+    //  - {decks:[{items:[...]}]} (lấy deck đầu)
+    function extractImportItems(parsed) {
+      let items = [];
+      if (Array.isArray(parsed)) items = parsed;
+      else if (parsed && Array.isArray(parsed.items)) items = parsed.items;
+      else if (parsed && Array.isArray(parsed.decks) && parsed.decks[0] && Array.isArray(parsed.decks[0].items)) items = parsed.decks[0].items;
+
+      return (items || [])
+        .filter(it => it && (it.jp || it.vi))
+        .map(it => ({
+          jp: String(it.jp ?? ""),
+          reading: String(it.reading ?? ""),
+          vi: String(it.vi ?? ""),
+          tags: Array.isArray(it.tags) ? it.tags.map(String) : [],
+          examples: Array.isArray(it.examples) ? it.examples.map(ex => ({
+            jp: String(ex.jp ?? ""),
+            vi: String(ex.vi ?? "")
+          })) : []
+        }));
+    }
+
+    /***********************
+     * DOM refs
+     ***********************/
+    const el = {
+      deckSelect: document.getElementById("deckSelect"),
+      searchInput: document.getElementById("searchInput"),
+      modeSelect: document.getElementById("modeSelect"),
+      quizType: document.getElementById("quizType"),
+
+      statTotal: document.getElementById("statTotal"),
+      statKnown: document.getElementById("statKnown"),
+      statLearning: document.getElementById("statLearning"),
+
+      btnFlash: document.getElementById("btnFlash"),
+      btnQuiz: document.getElementById("btnQuiz"),
+      btnShuffle: document.getElementById("btnShuffle"),
+      btnResetProgress: document.getElementById("btnResetProgress"),
+
+      flashEmpty: document.getElementById("flashEmpty"),
+      flashArea: document.getElementById("flashArea"),
+      swiperWrapper: document.getElementById("swiperWrapper"),
+      cardIndex: document.getElementById("cardIndex"),
+      cardCount: document.getElementById("cardCount"),
+      btnPrev: document.getElementById("btnPrev"),
+      btnNext: document.getElementById("btnNext"),
+      btnMarkKnown: document.getElementById("btnMarkKnown"),
+      btnMarkLearning: document.getElementById("btnMarkLearning"),
+      btnSpeak: document.getElementById("btnSpeak"),
+
+      quizEmpty: document.getElementById("quizEmpty"),
+      quizArea: document.getElementById("quizArea"),
+      quizMeta: document.getElementById("quizMeta"),
+      quizPrompt: document.getElementById("quizPrompt"),
+      quizHint: document.getElementById("quizHint"),
+      quizMC: document.getElementById("quizMC"),
+      quizOptions: document.getElementById("quizOptions"),
+      quizTypeBox: document.getElementById("quizTypeBox"),
+      typeInput: document.getElementById("typeInput"),
+      btnTypeSubmit: document.getElementById("btnTypeSubmit"),
+      btnTypeShow: document.getElementById("btnTypeShow"),
+      typeFeedback: document.getElementById("typeFeedback"),
+      btnNewQuestion: document.getElementById("btnNewQuestion"),
+      btnQuizSpeak: document.getElementById("btnQuizSpeak"),
+
+      scoreRight: document.getElementById("scoreRight"),
+      scoreWrong: document.getElementById("scoreWrong"),
+
+      // modal
+      importMode: document.getElementById("importMode"),
+      importDeckSelect: document.getElementById("importDeckSelect"),
+      newDeckTitle: document.getElementById("newDeckTitle"),
+      btnDeleteSelectedDeck: document.getElementById("btnDeleteSelectedDeck"),
+
+      jsonTextarea: document.getElementById("jsonTextarea"),
+      btnLoadSample: document.getElementById("btnLoadSample"),
+      btnClearJSON: document.getElementById("btnClearJSON"),
+      btnApplyJSON: document.getElementById("btnApplyJSON"),
+      jsonError: document.getElementById("jsonError"),
+
+      // export
+      btnExportData: document.getElementById("btnExportData"),
+      btnExportAll: document.getElementById("btnExportAll")
+    };
+
+    /***********************
+     * Render
+     ***********************/
+    function renderDeckSelect() {
+      const decks = state.data.decks;
+
+      // Main deck select
+      el.deckSelect.innerHTML = "";
+      if (!decks.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "— Chưa có deck —";
+        el.deckSelect.appendChild(opt);
+        el.deckSelect.disabled = true;
+      } else {
+        el.deckSelect.disabled = false;
+        for (const d of decks) {
+          const opt = document.createElement("option");
+          opt.value = d.id;
+          opt.textContent = d.title;
+          el.deckSelect.appendChild(opt);
+        }
+        if (!state.deckId || !decks.some(d => d.id === state.deckId)) state.deckId = decks[0].id;
+        el.deckSelect.value = state.deckId;
+      }
+
+      // Import deck select
+      el.importDeckSelect.innerHTML = "";
+      if (!decks.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "— Chưa có chủ đề —";
+        el.importDeckSelect.appendChild(opt);
+        el.importDeckSelect.disabled = true;
+      } else {
+        el.importDeckSelect.disabled = false;
+        for (const d of decks) {
+          const opt = document.createElement("option");
+          opt.value = d.id;
+          opt.textContent = d.title;
+          el.importDeckSelect.appendChild(opt);
+        }
+        el.importDeckSelect.value = state.deckId || decks[0].id;
+      }
+    }
+
+    function applyFilters() {
+      const deck = getDeck();
+      const q = (el.searchInput.value || "").trim().toLowerCase();
+      if (!deck) { state.filteredItems = []; return; }
+      const items = deck.items || [];
+      if (!q) { state.filteredItems = items.slice(); return; }
+
+      state.filteredItems = items.filter(it => {
+        const hay = [
+          it.jp, it.reading, it.vi,
+          ...(it.tags || []),
+          ...((it.examples||[]).flatMap(ex => [ex.jp, ex.vi]))
+        ].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    function renderStats() {
+      const deck = getDeck();
+      if (!deck) {
+        el.statTotal.textContent = "0";
+        el.statKnown.textContent = "0";
+        el.statLearning.textContent = "0";
+        return;
+      }
+      ensureProgressDeck(deck.id);
+      el.statTotal.textContent = String(deck.items.length);
+      el.statKnown.textContent = String(state.progress[deck.id].known.length);
+      el.statLearning.textContent = String(state.progress[deck.id].learning.length);
+    }
+
+    function isMobile() {
+      return window.matchMedia("(max-width: 576px)").matches;
+    }
+
+    function renderFlashcards() {
+      applyFilters();
+      const items = state.filteredItems;
+      const hasData = items.length > 0;
+
+      el.flashEmpty.classList.toggle("d-none", hasData);
+      el.flashArea.classList.toggle("d-none", !hasData);
+
+      if (state.swiper) {
+        state.swiper.destroy(true, true);
+        state.swiper = null;
+      }
+      el.swiperWrapper.innerHTML = "";
+
+      if (!hasData) {
+        el.cardIndex.textContent = "0";
+        el.cardCount.textContent = "0";
+        return;
+      }
+
+      items.forEach((it, idx) => {
+        const slide = document.createElement("div");
+        slide.className = "swiper-slide";
+        slide.innerHTML = `
+          <div class="flip-wrap" data-item-id="${escapeHTML(it.id)}">
+            <div class="flip-card">
+              <div class="flip-face flip-front">
+                <div class="card-top">
+                  <span class="chip"><i class="bi bi-lightning-fill text-primary"></i> Front</span>
+                  <span class="chip"><i class="bi bi-hash"></i> ${idx+1}</span>
+                </div>
+                <div class="card-mid">
+                  <div class="jp">${escapeHTML(state.mode === "jp_to_vi" ? (it.jp || "—") : (it.vi || "—"))}</div>
+                  ${state.mode === "jp_to_vi"
+                    ? (it.reading ? `<div class="reading">${escapeHTML(it.reading)}</div>` : ``)
+                    : (it.jp ? `<div class="reading">${escapeHTML(it.reading ? `${it.jp}（${it.reading}）` : it.jp)}</div>` : ``)
+                  }
+                  <div class="hint">Bấm để lật</div>
+                </div>
+                <div class="card-bot">
+                  <span class="small-muted">${escapeHTML((it.tags||[]).slice(0,3).join(" • "))}</span>
+                  <span class="small-muted"><i class="bi bi-space-bar"></i> Space</span>
+                </div>
+              </div>
+
+              <div class="flip-face flip-back">
+                <div class="card-top">
+                  <span class="chip"><i class="bi bi-stars text-success"></i> Back</span>
+                  <span class="chip"><i class="bi bi-tag"></i> ${escapeHTML(it.id)}</span>
+                </div>
+
+                <div class="card-mid">
+                  <div class="meaning">${escapeHTML(state.mode === "jp_to_vi" ? (it.vi || "—") : (it.jp || "—"))}</div>
+                  ${state.mode === "jp_to_vi"
+                    ? (it.jp ? `<div class="reading">${escapeHTML(it.reading ? `${it.jp}（${it.reading}）` : it.jp)}</div>` : ``)
+                    : (it.vi ? `<div class="reading">${escapeHTML(it.vi)}</div>` : ``)
+                  }
+                  ${renderExampleHint(it)}
+                </div>
+
+                <div class="card-bot">
+                  <span class="small-muted">${escapeHTML(renderMiniExample(it))}</span>
+                  <span class="small-muted"><i class="bi bi-arrow-left-right"></i> ← →</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        el.swiperWrapper.appendChild(slide);
+      });
+
+      const paginationType = isMobile() ? "progressbar" : "fraction";
+
+      state.swiper = new Swiper("#cardSwiper", {
+        slidesPerView: 1,
+        spaceBetween: 16,
+        centeredSlides: true,
+        keyboard: { enabled: true },
+        pagination: { el: ".swiper-pagination", type: paginationType },
+        scrollbar: { el: ".swiper-scrollbar", draggable: true }
+      });
+
+      document.querySelectorAll(".flip-wrap").forEach(w => {
+        w.addEventListener("click", () => w.classList.toggle("is-flipped"));
+      });
+
+      state.swiper.on("slideChange", () => {
+        updateCardCounter();
+        resetFlipOnActive();
+        renderCardFooterButtons();
+      });
+
+      updateCardCounter();
+      resetFlipOnActive();
+      renderCardFooterButtons();
+    }
+
+    function resetFlipOnActive() {
+      document.querySelectorAll(".flip-wrap.is-flipped").forEach(w => w.classList.remove("is-flipped"));
+    }
+    function updateCardCounter() {
+      const total = state.filteredItems.length;
+      const idx = (state.swiper ? state.swiper.activeIndex : 0) + 1;
+      el.cardIndex.textContent = String(Math.min(idx, total));
+      el.cardCount.textContent = String(total);
+    }
+    function getActiveItem() {
+      const items = state.filteredItems;
+      if (!items.length) return null;
+      const i = state.swiper ? state.swiper.activeIndex : 0;
+      return items[i] || null;
+    }
+    function renderCardFooterButtons() {
+      const deck = getDeck();
+      const it = getActiveItem();
+      if (!deck || !it) return;
+
+      const known = isKnown(deck.id, it.id);
+      const learning = isLearning(deck.id, it.id);
+
+      el.btnMarkKnown.classList.toggle("btn-success", known);
+      el.btnMarkKnown.classList.toggle("btn-outline-success", !known);
+
+      el.btnMarkLearning.classList.toggle("btn-warning", learning);
+      el.btnMarkLearning.classList.toggle("btn-outline-warning", !learning);
+    }
+
+    function renderMiniExample(it) {
+      const ex = (it.examples || [])[0];
+      return ex?.jp ? ex.jp : "";
+    }
+    function renderExampleHint(it) {
+      const ex = (it.examples || [])[0];
+      if (!ex || !ex.jp) return `<div class="hint">Mẹo: thêm examples trong JSON để hiện câu ví dụ</div>`;
+      const vi = ex.vi ? `<div class="small-muted mt-1">${escapeHTML(ex.vi)}</div>` : "";
+      return `
+        <div class="mt-2 w-100" style="max-width: 720px;">
+          <div class="hint"><i class="bi bi-quote"></i> Ví dụ</div>
+          <div class="mt-1" style="font-weight:700">${escapeHTML(ex.jp)}</div>
+          ${vi}
+        </div>
+      `;
+    }
+
+    function renderQuizArea() {
+      applyFilters();
+      const items = state.filteredItems;
+      const hasData = items.length > 0;
+
+      el.quizEmpty.classList.toggle("d-none", hasData);
+      el.quizArea.classList.toggle("d-none", !hasData);
+      if (!hasData) return;
+
+      state.quizType = el.quizType.value;
+      el.quizMC.classList.toggle("d-none", state.quizType !== "mc");
+      el.quizTypeBox.classList.toggle("d-none", state.quizType !== "type");
+
+      makeNewQuestion();
+      renderScore();
+    }
+
+    function renderScore() {
+      el.scoreRight.textContent = String(state.score.right);
+      el.scoreWrong.textContent = String(state.score.wrong);
+    }
+
+    /***********************
+     * Quiz
+     ***********************/
+    function makeNewQuestion() {
+      const deck = getDeck();
+      const items = state.filteredItems;
+      if (!deck || !items.length) return;
+
+      const answerItem = items[Math.floor(Math.random() * items.length)];
+      const mode = state.mode;
+
+      const prompt = (mode === "jp_to_vi") ? (answerItem.jp || "—") : (answerItem.vi || "—");
+      const answer = (mode === "jp_to_vi") ? (answerItem.vi || "") : (answerItem.jp || "");
+
+      state.currentQuiz = { mode, answerItem, prompt, answer };
+
+      el.quizMeta.textContent = `${deck.title} • ${mode === "jp_to_vi" ? "JP→VI" : "VI→JP"} • ${state.quizType === "mc" ? "Trắc nghiệm" : "Gõ đáp án"}`;
+      el.quizPrompt.textContent = prompt;
+      el.quizHint.classList.add("d-none");
+      el.quizHint.textContent = "";
+
+      if (state.quizType === "mc") buildMCOptions(mode, answerItem, items);
+      else { el.typeInput.value = ""; el.typeFeedback.innerHTML = ""; el.typeInput.focus(); }
+    }
+
+    function buildMCOptions(mode, answerItem, items) {
+      const pool = items.filter(x => x.id !== answerItem.id);
+      shuffleInPlace(pool);
+      const distractors = pool.slice(0, 3);
+
+      const options = [answerItem, ...distractors];
+      shuffleInPlace(options);
+
+      el.quizOptions.innerHTML = "";
+      options.forEach(opt => {
+        const text = (mode === "jp_to_vi") ? (opt.vi || "—") : (opt.jp || "—");
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.type = "button";
+        btn.innerHTML = `
+          <div class="d-flex align-items-start gap-2">
+            <i class="bi bi-circle text-secondary" style="margin-top:.2rem"></i>
+            <div>
+              <div class="fw-semibold">${escapeHTML(text)}</div>
+              ${(mode === "vi_to_jp" && opt.reading) ? `<div class="small-muted">${escapeHTML(opt.reading)}</div>` : ``}
+            </div>
+          </div>
+        `;
+        btn.addEventListener("click", () => {
+          const isCorrect = (opt.id === answerItem.id);
+          handleMCAnswer(btn, isCorrect, answerItem, mode);
+        });
+        el.quizOptions.appendChild(btn);
+      });
+    }
+
+    function handleMCAnswer(btn, isCorrect, answerItem, mode) {
+      [...el.quizOptions.querySelectorAll("button")].forEach(b => b.disabled = true);
+
+      if (isCorrect) {
+        btn.classList.add("correct");
+        state.score.right++;
+        mark(getDeck().id, answerItem.id, "known");
+        celebrate();
+      } else {
+        btn.classList.add("wrong");
+        state.score.wrong++;
+        mark(getDeck().id, answerItem.id, "learning");
+        // highlight correct
+        const correctText = (mode === "jp_to_vi") ? (answerItem.vi || "") : (answerItem.jp || "");
+        [...el.quizOptions.querySelectorAll("button")].forEach(b => {
+          if (b.textContent.includes(correctText)) b.classList.add("correct");
+        });
+      }
+      renderScore();
+
+      el.quizHint.classList.remove("d-none");
+      el.quizHint.innerHTML = `
+        <div><b>Đáp án:</b> ${escapeHTML(mode === "jp_to_vi" ? answerItem.vi : answerItem.jp)}</div>
+        ${(mode === "vi_to_jp" && answerItem.reading) ? `<div class="small-muted">読み方: ${escapeHTML(answerItem.reading)}</div>` : ``}
+      `;
+    }
+
+    function handleTypeSubmit() {
+      const q = state.currentQuiz;
+      if (!q) return;
+
+      const user = (el.typeInput.value || "").trim();
+      if (!user) return;
+
+      const correct = (q.answer || "").trim();
+      const normalize = (s) => s.replace(/\s+/g," ").trim().toLowerCase();
+
+      const ok = (q.mode === "jp_to_vi")
+        ? normalize(user) === normalize(correct)
+        : user.replace(/\s+/g,"") === correct.replace(/\s+/g,"");
+
+      if (ok) {
+        state.score.right++;
+        mark(getDeck().id, q.answerItem.id, "known");
+        el.typeFeedback.innerHTML = `<div class="alert alert-success py-2 mb-0"><b>Đúng!</b> ${escapeHTML(correct)}</div>`;
+        celebrate();
+      } else {
+        state.score.wrong++;
+        mark(getDeck().id, q.answerItem.id, "learning");
+        el.typeFeedback.innerHTML = `
+          <div class="alert alert-danger py-2 mb-0">
+            <b>Sai.</b> Đáp án đúng: <b>${escapeHTML(correct)}</b>
+            ${(q.mode === "vi_to_jp" && q.answerItem.reading) ? `<div class="small-muted">読み方: ${escapeHTML(q.answerItem.reading)}</div>` : ``}
+          </div>
+        `;
+      }
+      renderScore();
+    }
+
+    function showTypeAnswer() {
+      const q = state.currentQuiz;
+      if (!q) return;
+      el.typeFeedback.innerHTML = `
+        <div class="alert alert-secondary py-2 mb-0">
+          Đáp án: <b>${escapeHTML(q.answer)}</b>
+          ${(q.mode === "vi_to_jp" && q.answerItem.reading) ? `<div class="small-muted">読み方: ${escapeHTML(q.answerItem.reading)}</div>` : ``}
+        </div>
+      `;
+    }
+
+    /***********************
+     * TTS
+     ***********************/
+    function speak(text, lang = "ja-JP") {
+      if (!("speechSynthesis" in window)) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang;
+      u.rate = 0.95;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }
+
+    /***********************
+     * Utils
+     ***********************/
+    function escapeHTML(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+    function shuffleInPlace(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function celebrate() {
+      try {
+        if (window.confetti) window.confetti({ particleCount: 70, spread: 60, origin: { y: 0.65 } });
+      } catch {}
+    }
+
+    /***********************
+     * Sample data (small)
+     ***********************/
+    const sampleData = {
+      decks: [
+        {
+          id: "lai_xe_o_to",
+          title: "Lái xe ô tô",
+          description: "Sample",
+          items: [
+            { jp:"フロントガラス", reading:"", vi:"kính chắn gió", tags:["oto"], examples:[{jp:"フロントガラスが汚れています。", vi:"Kính chắn gió đang bẩn."}] },
+            { jp:"ワイパー", reading:"", vi:"cần gạt nước", tags:["oto"], examples:[{jp:"ワイパーを動かしてください。", vi:"Hãy bật cần gạt nước."}] }
+          ]
+        }
+      ]
+    };
+
+    /***********************
+     * Import UI sync
+     ***********************/
+    function syncImportUI() {
+      const mode = el.importMode.value;
+      const isAppend = mode === "append_existing";
+      el.importDeckSelect.disabled = !isAppend || !state.data.decks.length;
+      el.newDeckTitle.disabled = isAppend;
+    }
+
+    /***********************
+     * Export
+     ***********************/
+    function downloadJSON(filename, obj) {
+      const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    /***********************
+     * Init load
+     ***********************/
+    function loadInitialData() {
+      const stored = loadFromStorage(STORAGE_KEY_DATA, null);
+      if (stored) state.data = normalizeData(stored);
+      else {
+        // build from sample but auto-id
+        const normalized = normalizeData(sampleData);
+        // ensure ids exist and nice incremental per deck
+        for (const d of normalized.decks) {
+          const deck = { ...d, items: [] };
+          for (const it of d.items) deck.items.push({ id: nextItemId(deck), ...it });
+          d.items = deck.items;
+        }
+        state.data = normalized;
+        saveToStorage(STORAGE_KEY_DATA, state.data);
+      }
+
+      renderDeckSelect();
+      renderStats();
+      renderFlashcards();
+      renderQuizArea();
+
+      // default textarea shows quick import structure (not full app data)
+      el.jsonTextarea.value = JSON.stringify({ items: [] }, null, 2);
+      syncImportUI();
+    }
+
+    /***********************
+     * Events
+     ***********************/
+    el.deckSelect.addEventListener("change", () => {
+      state.deckId = el.deckSelect.value || null;
+      renderStats();
+      renderFlashcards();
+      renderQuizArea();
+    });
+
+    el.searchInput.addEventListener("input", () => {
+      renderFlashcards();
+      renderQuizArea();
+    });
+
+    el.modeSelect.addEventListener("change", () => {
+      state.mode = el.modeSelect.value;
+      renderFlashcards();
+      renderQuizArea();
+    });
+
+    el.quizType.addEventListener("change", () => {
+      state.quizType = el.quizType.value;
+      renderQuizArea();
+    });
+
+    el.btnPrev.addEventListener("click", () => state.swiper?.slidePrev());
+    el.btnNext.addEventListener("click", () => state.swiper?.slideNext());
+
+    el.btnMarkKnown.addEventListener("click", () => {
+      const deck = getDeck(); const it = getActiveItem();
+      if (!deck || !it) return;
+      mark(deck.id, it.id, isKnown(deck.id, it.id) ? "clear" : "known");
+    });
+
+    el.btnMarkLearning.addEventListener("click", () => {
+      const deck = getDeck(); const it = getActiveItem();
+      if (!deck || !it) return;
+      mark(deck.id, it.id, isLearning(deck.id, it.id) ? "clear" : "learning");
+    });
+
+    el.btnSpeak.addEventListener("click", () => {
+      const it = getActiveItem();
+      if (!it) return;
+      const text = it.jp || it.reading || "";
+      if (text) speak(text, "ja-JP");
+    });
+
+    el.btnQuizSpeak.addEventListener("click", () => {
+      const q = state.currentQuiz;
+      if (!q) return;
+      const isJP = /[\u3040-\u30ff\u4e00-\u9faf]/.test(q.prompt);
+      speak(q.prompt, isJP ? "ja-JP" : "vi-VN");
+    });
+
+    el.btnNewQuestion.addEventListener("click", () => makeNewQuestion());
+
+    el.btnTypeSubmit.addEventListener("click", () => handleTypeSubmit());
+    el.btnTypeShow.addEventListener("click", () => showTypeAnswer());
+    el.typeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleTypeSubmit();
+    });
+
+    el.btnShuffle.addEventListener("click", () => {
+      const deck = getDeck();
+      if (!deck) return;
+      shuffleInPlace(deck.items);
+      saveToStorage(STORAGE_KEY_DATA, state.data);
+      renderFlashcards();
+      renderQuizArea();
+    });
+
+    el.btnResetProgress.addEventListener("click", () => {
+      const deck = getDeck();
+      if (!deck) return;
+      if (!confirm("Reset tiến độ (Nhớ/Chưa nhớ) cho chủ đề hiện tại?")) return;
+      state.progress[deck.id] = { known: [], learning: [] };
+      saveToStorage(STORAGE_KEY_PROGRESS, state.progress);
+      renderStats();
+      renderCardFooterButtons();
+    });
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea") return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        const active = document.querySelector(".swiper-slide-active .flip-wrap");
+        if (active) active.classList.toggle("is-flipped");
+      }
+      if (e.key === "ArrowLeft") state.swiper?.slidePrev();
+      if (e.key === "ArrowRight") state.swiper?.slideNext();
+    });
+
+    // Modal import UI
+    el.importMode.addEventListener("change", syncImportUI);
+    document.getElementById("dataModal").addEventListener("shown.bs.modal", () => {
+      if (state.deckId) el.importDeckSelect.value = state.deckId;
+      el.jsonError.classList.add("d-none");
+      syncImportUI();
+    });
+
+    el.btnLoadSample.addEventListener("click", () => {
+      // sample quick-import items
+      el.jsonTextarea.value = JSON.stringify({
+        items: [
+          { jp: "フロントガラス", reading: "", vi: "kính chắn gió", tags: ["oto"] },
+          { jp: "ワイパー", reading: "", vi: "cần gạt nước", tags: ["oto"] }
+        ]
+      }, null, 2);
+      el.jsonError.classList.add("d-none");
+    });
+
+    el.btnClearJSON.addEventListener("click", () => {
+      el.jsonTextarea.value = JSON.stringify({ items: [] }, null, 2);
+      el.jsonError.classList.add("d-none");
+    });
+
+    // Delete selected deck
+    el.btnDeleteSelectedDeck.addEventListener("click", () => {
+      const deckId = el.importDeckSelect.value;
+      if (!deckId) return;
+
+      const deck = state.data.decks.find(d => d.id === deckId);
+      if (!deck) return;
+
+      if (!confirm(`Xóa chủ đề "${deck.title}"? (Sẽ xóa cả tiến độ của chủ đề này)`)) return;
+
+      state.data.decks = state.data.decks.filter(d => d.id !== deckId);
+      delete state.progress[deckId];
+
+      saveToStorage(STORAGE_KEY_DATA, state.data);
+      saveToStorage(STORAGE_KEY_PROGRESS, state.progress);
+
+      state.deckId = state.data.decks[0]?.id || null;
+
+      renderDeckSelect();
+      renderStats();
+      renderFlashcards();
+      renderQuizArea();
+    });
+
+    // Import (append/create) WITHOUT overwrite
+    el.btnApplyJSON.addEventListener("click", () => {
+      const raw = el.jsonTextarea.value.trim();
+      const parsed = safeJSONParse(raw);
+
+      if (!parsed.ok) {
+        el.jsonError.textContent = "JSON không hợp lệ: " + parsed.error.message;
+        el.jsonError.classList.remove("d-none");
+        return;
+      }
+
+      const importItems = extractImportItems(parsed.value);
+      if (!importItems.length) {
+        el.jsonError.textContent = "JSON hợp lệ nhưng không tìm thấy items. Dùng {items:[...]} hoặc mảng [...].";
+        el.jsonError.classList.remove("d-none");
+        return;
+      }
+
+      const mode = el.importMode.value;
+
+      if (mode === "append_existing") {
+        const deckId = el.importDeckSelect.value || state.deckId;
+        const deck = state.data.decks.find(d => d.id === deckId);
+        if (!deck) {
+          el.jsonError.textContent = "Không có chủ đề để append. Hãy chọn 'Tạo chủ đề mới'.";
+          el.jsonError.classList.remove("d-none");
+          return;
+        }
+        for (const it of importItems) deck.items.push({ id: nextItemId(deck), ...it });
+        state.deckId = deck.id;
+
+      } else {
+        const title = (el.newDeckTitle.value || "").trim();
+        if (!title) {
+          el.jsonError.textContent = "Bạn chưa nhập Title cho chủ đề mới.";
+          el.jsonError.classList.remove("d-none");
+          return;
+        }
+        const baseId = slugifyId(title);
+        const deckId = makeUniqueDeckId(baseId);
+
+        const newDeck = { id: deckId, title, description: "", items: [] };
+        for (const it of importItems) newDeck.items.push({ id: nextItemId(newDeck), ...it });
+
+        state.data.decks.push(newDeck);
+        state.deckId = newDeck.id;
+        el.newDeckTitle.value = "";
+      }
+
+      saveToStorage(STORAGE_KEY_DATA, state.data);
+      el.jsonError.classList.add("d-none");
+
+      const modalEl = document.getElementById("dataModal");
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal?.hide();
+
+      renderDeckSelect();
+      renderStats();
+      renderFlashcards();
+      renderQuizArea();
+    });
+
+    // Export
+    el.btnExportData.addEventListener("click", () => {
+      downloadJSON("jp_vocab_data.json", state.data);
+    });
+    el.btnExportAll.addEventListener("click", () => {
+      downloadJSON("jp_vocab_data_plus_progress.json", { data: state.data, progress: state.progress });
+    });
+
+    // Responsive: re-init swiper pagination type on resize breakpoint changes
+    let lastMobile = isMobile();
+    window.addEventListener("resize", () => {
+      const now = isMobile();
+      if (now !== lastMobile) {
+        lastMobile = now;
+        renderFlashcards();
+      }
+    });
+
+    /***********************
+     * Start
+     ***********************/
+    loadInitialData();
+  </script>
+</body>
+</html>

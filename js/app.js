@@ -3,6 +3,8 @@
      ***********************/
     const STORAGE_KEY_LANG = "jp_vocab_app_lang";
     const STORAGE_KEY_AUTO_SPEAK = "jp_vocab_app_auto_speak";
+    const STORAGE_KEY_VISIT_LAST = "jp_vocab_app_visit_last";
+    const STORAGE_KEY_VISIT_COUNT = "jp_vocab_app_visit_count";
     const DEFAULT_LANG = document.documentElement.getAttribute("lang") || "en";
     let i18n = {};
 
@@ -285,7 +287,8 @@
       // export
       btnExportData: document.getElementById("btnExportData"),
       btnExportAll: document.getElementById("btnExportAll"),
-      autoSpeakToggle: document.getElementById("autoSpeakToggle")
+      autoSpeakToggle: document.getElementById("autoSpeakToggle"),
+      visitCount: document.getElementById("visitCount")
     };
 
     /***********************
@@ -714,6 +717,54 @@
         if (window.confetti) window.confetti({ particleCount: 70, spread: 60, origin: { y: 0.65 } });
       } catch {}
     }
+    function getCounterClient() {
+      if (window.__counterClient) return window.__counterClient;
+      const CounterCtor = window.Counter || window.CounterAPI?.Counter || window.counterapi?.Counter;
+      if (!CounterCtor) {
+        console.log("[counterapi] Counter ctor not ready", {
+          hasCounter: !!window.Counter,
+          hasCounterAPI: !!window.CounterAPI,
+          hasCounterAPI_Counter: !!window.CounterAPI?.Counter,
+          hasCounterapi: !!window.counterapi,
+          hasCounterapi_Counter: !!window.counterapi?.Counter
+        });
+        return null;
+      }
+      console.log("[counterapi] Counter ctor ready", CounterCtor);
+      window.__counterClient = new CounterCtor({
+        version: "v1",
+        namespace: "luckyba",
+        debug: false,
+        timeout: 5000
+      });
+      return window.__counterClient;
+    }
+    async function loadVisitCount() {
+      if (!el.visitCount) return;
+      el.visitCount.textContent = t("visits_loading", "Loading...");
+      const today = new Date().toISOString().slice(0, 10);
+      const last = loadFromStorage(STORAGE_KEY_VISIT_LAST, "");
+      const cachedCount = loadFromStorage(STORAGE_KEY_VISIT_COUNT, null);
+      if (last === today && typeof cachedCount === "number") {
+        el.visitCount.textContent = tf("visits_text", { n: cachedCount }, `Visits: ${cachedCount}`);
+        return;
+      }
+      try {
+        const client = getCounterClient();
+        if (!client) throw new Error("counter client missing");
+        const key = "jp-vocab-visits";
+        const result = (last === today)
+          ? await client.get(key)
+          : await client.up(key);
+        const total = result?.value ?? result?.count ?? result?.data?.count ?? result?.data?.value;
+        if (typeof total !== "number") throw new Error("visit count missing");
+        el.visitCount.textContent = tf("visits_text", { n: total }, `Visits: ${total}`);
+        saveToStorage(STORAGE_KEY_VISIT_LAST, today);
+        saveToStorage(STORAGE_KEY_VISIT_COUNT, total);
+      } catch {
+        el.visitCount.textContent = t("visits_failed", "Unavailable");
+      }
+    }
 
     /***********************
      * Import UI sync
@@ -1085,6 +1136,7 @@
       await loadI18n();
       loadInitialData();
       updateAIPrompt();
+      loadVisitCount();
     }
 
     startApp();

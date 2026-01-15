@@ -270,6 +270,20 @@
   ]
 }</code></pre>
           </div>
+          <div class="alert alert-secondary">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <div>
+                <div class="fw-semibold" data-i18n="json_ai_title">AI prompt (copy & paste)</div>
+                <div class="small text-secondary" data-i18n="json_ai_desc">
+                  If you want AI to generate JSON, copy the prompt below and fill in your topic/quantity. The result must be valid JSON.
+                </div>
+              </div>
+              <button id="btnCopyAiPrompt" type="button" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-clipboard"></i> <span data-i18n="btn_copy_prompt">Copy</span>
+              </button>
+            </div>
+            <pre class="mt-2 mb-0 small"><code id="jsonAiPrompt"></code></pre>
+          </div>
 
           <label class="form-label fw-semibold" data-i18n="label_json">JSON</label>
           <textarea id="jsonTextarea" class="form-control" rows="12" spellcheck="false"></textarea>
@@ -277,6 +291,9 @@
           <div class="d-flex flex-wrap gap-2 mt-2">
             <button id="btnLoadSample" class="btn btn-outline-secondary btn-sm" type="button">
               <i class="bi bi-file-earmark-text"></i> <span data-i18n="btn_load_sample">Load sample</span>
+            </button>
+            <button id="btnPasteJSON" class="btn btn-outline-secondary btn-sm" type="button">
+              <i class="bi bi-clipboard"></i> <span data-i18n="btn_paste_json">Paste</span>
             </button>
             <button id="btnClearJSON" class="btn btn-outline-danger btn-sm" type="button">
               <i class="bi bi-trash3"></i> <span data-i18n="btn_clear_json">Clear</span>

@@ -53,6 +53,7 @@
         const select = document.getElementById("langSelect");
         if (select) select.value = lang;
       }
+      updateAIPrompt();
       document.title = t("app_title", document.title);
     }
 
@@ -269,9 +270,12 @@
       importDeckSelect: document.getElementById("importDeckSelect"),
       newDeckTitle: document.getElementById("newDeckTitle"),
       btnDeleteSelectedDeck: document.getElementById("btnDeleteSelectedDeck"),
+      btnCopyAiPrompt: document.getElementById("btnCopyAiPrompt"),
+      jsonAiPrompt: document.getElementById("jsonAiPrompt"),
 
       jsonTextarea: document.getElementById("jsonTextarea"),
       btnLoadSample: document.getElementById("btnLoadSample"),
+      btnPasteJSON: document.getElementById("btnPasteJSON"),
       btnClearJSON: document.getElementById("btnClearJSON"),
       btnApplyJSON: document.getElementById("btnApplyJSON"),
       jsonError: document.getElementById("jsonError"),
@@ -701,6 +705,28 @@
       const isAppend = mode === "append_existing";
       el.importDeckSelect.disabled = !isAppend || !state.data.decks.length;
       el.newDeckTitle.disabled = isAppend;
+      updateAIPrompt();
+    }
+
+    function getSelectedDeckTitle() {
+      const deckId = el.importDeckSelect.value || state.deckId;
+      const deck = state.data.decks.find(d => d.id === deckId);
+      return deck?.title || "";
+    }
+
+    function buildAIPrompt() {
+      const topic = (el.importMode.value === "append_existing")
+        ? (getSelectedDeckTitle() || t("ai_topic_placeholder", "[YOUR TOPIC]"))
+        : t("ai_topic_placeholder", "[YOUR TOPIC]");
+
+      const count = t("ai_count_placeholder", "[NUMBER]");
+
+      return tf("json_ai_prompt_template", { topic, count }, "");
+    }
+
+    function updateAIPrompt() {
+      if (!el.jsonAiPrompt) return;
+      el.jsonAiPrompt.textContent = buildAIPrompt();
     }
 
     /***********************
@@ -855,6 +881,8 @@
 
     // Modal import UI
     el.importMode.addEventListener("change", syncImportUI);
+    el.importDeckSelect.addEventListener("change", updateAIPrompt);
+    el.newDeckTitle.addEventListener("input", updateAIPrompt);
     document.getElementById("dataModal").addEventListener("shown.bs.modal", () => {
       if (state.deckId) el.importDeckSelect.value = state.deckId;
       el.jsonError.classList.add("d-none");
@@ -872,10 +900,55 @@
       el.jsonError.classList.add("d-none");
     });
 
+    if (el.btnPasteJSON) {
+      el.btnPasteJSON.addEventListener("click", async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            el.jsonTextarea.value = text;
+            el.jsonError.classList.add("d-none");
+          }
+        } catch {
+          el.jsonError.textContent = t("paste_failed", "Cannot read clipboard. Please paste manually.");
+          el.jsonError.classList.remove("d-none");
+        }
+      });
+    }
+
     el.btnClearJSON.addEventListener("click", () => {
       el.jsonTextarea.value = JSON.stringify({ items: [] }, null, 2);
       el.jsonError.classList.add("d-none");
     });
+
+    if (el.btnCopyAiPrompt) {
+      el.btnCopyAiPrompt.addEventListener("click", async () => {
+        const text = buildAIPrompt();
+        const originalLabel = el.btnCopyAiPrompt.querySelector("[data-i18n]")?.textContent || "";
+        const setButtonState = (key) => {
+          const label = el.btnCopyAiPrompt.querySelector("[data-i18n]");
+          if (label) label.textContent = t(key, label.textContent);
+        };
+        try {
+          await navigator.clipboard.writeText(text);
+          setButtonState("copy_success");
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "true");
+          ta.style.position = "absolute";
+          ta.style.left = "-9999px";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          setButtonState("copy_success");
+        }
+        setTimeout(() => {
+          const label = el.btnCopyAiPrompt.querySelector("[data-i18n]");
+          if (label) label.textContent = originalLabel || t("btn_copy_prompt", "Copy");
+        }, 1500);
+      });
+    }
 
     // Delete selected deck
     el.btnDeleteSelectedDeck.addEventListener("click", () => {
@@ -987,6 +1060,7 @@
     async function startApp() {
       await loadI18n();
       loadInitialData();
+      updateAIPrompt();
     }
 
     startApp();

@@ -38,6 +38,32 @@
       font-size: .85em;
       background: #fff;
     }
+    .app-header{ gap: 10px; }
+    .header-left{ flex: 1 1 auto; min-width: 240px; }
+    .header-actions{ justify-content: flex-end; }
+    .header-actions .btn,
+    .header-actions .dropdown .btn{ white-space: nowrap; }
+    .lang-wrap{ border: 1px solid rgba(0,0,0,.08); border-radius: 999px; padding: .2rem .4rem; background: #fff; }
+    .lang-wrap .form-select{ border: 0; box-shadow: none; padding-left: .35rem; }
+
+    @media (max-width: 992px){
+      .app-header{ align-items: flex-start; }
+      .header-actions{ width: 100%; justify-content: space-between; }
+    }
+    @media (max-width: 576px){
+      .header-left{ width: 100%; }
+      .header-left .small{ display: block; margin-left: .15rem; }
+      .header-actions{
+        width: 100%;
+        gap: .5rem;
+      }
+      .header-actions > *{ flex: 1 1 calc(50% - .5rem); }
+      .header-actions .dropdown{ flex: 1 1 calc(50% - .5rem); }
+      .header-actions .dropdown .btn,
+      .header-actions .btn{ width: 100%; }
+      .lang-wrap{ flex: 1 1 100%; justify-content: space-between; }
+      .lang-wrap label{ font-size: .85rem; }
+    }
 
     /* Flashcard flip */
     .flip-wrap{

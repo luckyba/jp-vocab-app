@@ -812,6 +812,28 @@
       a.remove();
       URL.revokeObjectURL(url);
     }
+    function stripItemIds(items) {
+      return (items || []).map(it => {
+        const { id, ...rest } = it || {};
+        return { ...rest };
+      });
+    }
+    function exportDecksNoIds() {
+      const decks = state.data.decks || [];
+      if (!decks.length) {
+        downloadJSON("jp_vocab_data.json", { decks: [] });
+        return;
+      }
+      decks.forEach((d, idx) => {
+        const slug = slugifyId(d.title || `deck_${idx + 1}`) || `deck_${idx + 1}`;
+        const data = {
+          title: d.title || `Deck ${idx + 1}`,
+          description: d.description || "",
+          items: stripItemIds(d.items)
+        };
+        downloadJSON(`jp_vocab_${slug}.json`, data);
+      });
+    }
 
     /***********************
      * Init load
@@ -1113,7 +1135,7 @@
 
     // Export
     el.btnExportData.addEventListener("click", () => {
-      downloadJSON("jp_vocab_data.json", state.data);
+      exportDecksNoIds();
     });
     el.btnExportAll.addEventListener("click", () => {
       downloadJSON("jp_vocab_data_plus_progress.json", { data: state.data, progress: state.progress });

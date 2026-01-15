@@ -28,6 +28,11 @@
       background: rgba(255,255,255,.8);
       padding: 10px 12px;
     }
+    .stat-filter{ cursor: pointer; user-select: none; }
+    .stat-filter.active{
+      border-color: rgba(13,110,253,.35);
+      background: rgba(13,110,253,.10);
+    }
     .small-muted{ color: rgba(0,0,0,.55); }
     .kbd {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;

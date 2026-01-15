@@ -47,7 +47,7 @@
   "quiz_type_placeholder": "Type the answer and press Enter...",
   "btn_type_submit": "Submit",
   "btn_type_show": "Show answer",
-  "score_right": "Right",
+  "score_right": "Correct",
   "score_wrong": "Wrong",
   "btn_quiz_speak": "Speak question",
   "footer_note": "Multi-file HTML - localStorage - Import append/create - Export backup",

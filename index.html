@@ -95,9 +95,15 @@
         <div class="col-12">
           <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-2 align-items-center">
-              <span class="stat"><i class="bi bi-collection-fill text-primary"></i> <span data-i18n="stat_total">Total</span>: <b id="statTotal">0</b></span>
-              <span class="stat"><i class="bi bi-check2-circle text-success"></i> <span data-i18n="stat_known">Known</span>: <b id="statKnown">0</b></span>
-              <span class="stat"><i class="bi bi-hourglass-split text-warning"></i> <span data-i18n="stat_learning">Learning</span>: <b id="statLearning">0</b></span>
+              <span id="statTotalWrap" class="stat stat-filter" role="button" tabindex="0" data-filter="all">
+                <i class="bi bi-collection-fill text-primary"></i> <span data-i18n="stat_total">Total</span>: <b id="statTotal">0</b>
+              </span>
+              <span id="statKnownWrap" class="stat stat-filter" role="button" tabindex="0" data-filter="known">
+                <i class="bi bi-check2-circle text-success"></i> <span data-i18n="stat_known">Known</span>: <b id="statKnown">0</b>
+              </span>
+              <span id="statLearningWrap" class="stat stat-filter" role="button" tabindex="0" data-filter="learning">
+                <i class="bi bi-hourglass-split text-warning"></i> <span data-i18n="stat_learning">Learning</span>: <b id="statLearning">0</b>
+              </span>
             </div>
 
             <div class="d-flex flex-wrap gap-2">

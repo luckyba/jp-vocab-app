@@ -87,14 +87,16 @@
     const state = {
       data: { decks: [] },
       deckId: null,
-      filteredItems: [],
+      filteredFlashItems: [],
+      filteredQuizItems: [],
       mode: "jp_to_vi",
       quizType: "mc",
       progress: loadFromStorage(STORAGE_KEY_PROGRESS, {}),
       score: { right: 0, wrong: 0 },
       currentQuiz: null,
       swiper: null,
-      autoSpeak: loadFromStorage(STORAGE_KEY_AUTO_SPEAK, false)
+      autoSpeak: loadFromStorage(STORAGE_KEY_AUTO_SPEAK, false),
+      flashFilter: "all"
     };
 
     /***********************
@@ -234,6 +236,9 @@
       statTotal: document.getElementById("statTotal"),
       statKnown: document.getElementById("statKnown"),
       statLearning: document.getElementById("statLearning"),
+      statTotalWrap: document.getElementById("statTotalWrap"),
+      statKnownWrap: document.getElementById("statKnownWrap"),
+      statLearningWrap: document.getElementById("statLearningWrap"),
 
       btnFlash: document.getElementById("btnFlash"),
       btnQuiz: document.getElementById("btnQuiz"),
@@ -340,11 +345,11 @@
     function applyFilters() {
       const deck = getDeck();
       const q = (el.searchInput.value || "").trim().toLowerCase();
-      if (!deck) { state.filteredItems = []; return; }
+      if (!deck) return [];
       const items = deck.items || [];
-      if (!q) { state.filteredItems = items.slice(); return; }
+      if (!q) return items.slice();
 
-      state.filteredItems = items.filter(it => {
+      return items.filter(it => {
         const hay = [
           it.jp, it.reading, it.vi,
           ...(it.tags || []),
@@ -352,6 +357,15 @@
         ].join(" ").toLowerCase();
         return hay.includes(q);
       });
+    }
+    function updateFlashFilterButtons() {
+      const setStat = (elm, active) => {
+        if (!elm) return;
+        elm.classList.toggle("active", active);
+      };
+      setStat(el.statTotalWrap, state.flashFilter === "all");
+      setStat(el.statLearningWrap, state.flashFilter === "learning");
+      setStat(el.statKnownWrap, state.flashFilter === "known");
     }
 
     function renderStats() {
@@ -373,8 +387,14 @@
     }
 
     function renderFlashcards() {
-      applyFilters();
-      const items = state.filteredItems;
+      let items = applyFilters();
+      const deck = getDeck();
+      if (deck) {
+        if (state.flashFilter === "known") items = items.filter(it => isKnown(deck.id, it.id));
+        if (state.flashFilter === "learning") items = items.filter(it => isLearning(deck.id, it.id));
+      }
+      state.filteredFlashItems = items;
+      updateFlashFilterButtons();
       const hasData = items.length > 0;
 
       el.flashEmpty.classList.toggle("d-none", hasData);
@@ -479,13 +499,13 @@
       document.querySelectorAll(".flip-wrap.is-flipped").forEach(w => w.classList.remove("is-flipped"));
     }
     function updateCardCounter() {
-      const total = state.filteredItems.length;
+      const total = state.filteredFlashItems.length;
       const idx = (state.swiper ? state.swiper.activeIndex : 0) + 1;
       el.cardIndex.textContent = String(Math.min(idx, total));
       el.cardCount.textContent = String(total);
     }
     function getActiveItem() {
-      const items = state.filteredItems;
+      const items = state.filteredFlashItems;
       if (!items.length) return null;
       const i = state.swiper ? state.swiper.activeIndex : 0;
       return items[i] || null;
@@ -523,8 +543,8 @@
     }
 
     function renderQuizArea() {
-      applyFilters();
-      const items = state.filteredItems;
+      const items = applyFilters();
+      state.filteredQuizItems = items;
       const hasData = items.length > 0;
 
       el.quizEmpty.classList.toggle("d-none", hasData);
@@ -549,7 +569,7 @@
      ***********************/
     function makeNewQuestion() {
       const deck = getDeck();
-      const items = state.filteredItems;
+      const items = state.filteredQuizItems;
       if (!deck || !items.length) return;
 
       const answerItem = items[Math.floor(Math.random() * items.length)];
@@ -1008,6 +1028,21 @@
     el.btnClearJSON.addEventListener("click", () => {
       el.jsonTextarea.value = JSON.stringify({ items: [] }, null, 2);
       el.jsonError.classList.add("d-none");
+    });
+
+    function setFlashFilter(next) {
+      state.flashFilter = next;
+      renderFlashcards();
+    }
+    [el.statTotalWrap, el.statKnownWrap, el.statLearningWrap].forEach(elm => {
+      if (!elm) return;
+      elm.addEventListener("click", () => setFlashFilter(elm.getAttribute("data-filter") || "all"));
+      elm.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setFlashFilter(elm.getAttribute("data-filter") || "all");
+        }
+      });
     });
 
     if (el.btnCopyAiPrompt) {

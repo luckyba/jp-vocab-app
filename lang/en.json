@@ -67,7 +67,7 @@
   "json_tip_note": "(no id required)",
   "json_ai_title": "AI prompt (copy & paste)",
   "json_ai_desc": "If you want AI to generate JSON, copy the prompt below and fill in your topic/quantity. The result must be valid JSON.",
-  "json_ai_prompt_template": "Create a JSON object with this format:\n{\"items\":[{\"jp\":\"\",\"reading\":\"\",\"vi\":\"\",\"tags\":[\"\"]}]}\nTopic: {topic}\nQuantity: {count}\nUse Vietnamese meaning in \"vi\".\nReturn only JSON, no explanation.",
+  "json_ai_prompt_template": "Create a JSON object with this format:\n{\"items\":[{\"jp\":\"\",\"reading\":\"\",\"vi\":\"\",\"tags\":[\"\"],\"examples\":[{\"jp\":\"\",\"vi\":\"\"}]}]}\nTopic: {topic}\nQuantity: {count}\nFields: jp, reading (optional), vi, tags (array), examples (array of {jp, vi}).\nUse Vietnamese meaning in \"vi\".\nReturn only JSON, no explanation.",
   "ai_topic_placeholder": "[YOUR TOPIC]",
   "ai_count_placeholder": "[NUMBER]",
   "btn_copy_prompt": "Copy",

@@ -102,6 +102,10 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2">
+              <div class="form-check form-switch d-flex align-items-center gap-2 me-1">
+                <input class="form-check-input" type="checkbox" role="switch" id="autoSpeakToggle">
+                <label class="form-check-label small text-secondary" for="autoSpeakToggle" data-i18n="label_auto_speak">Auto speak</label>
+              </div>
               <button id="btnFlash" class="btn btn-primary">
                 <i class="bi bi-cards"></i> <span data-i18n="btn_flashcards">Flashcards</span>
               </button>
@@ -124,10 +128,6 @@
               <div class="fw-bold fs-5" data-i18n="flashcards_title">Flashcards</div>
               <div class="small-muted" data-i18n="flashcards_hint">Tap the card to flip. Mark as Known / Learning.</div>
             </div>
-            <div class="d-flex gap-2">
-              <button id="btnPrev" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chevron-left"></i></button>
-              <button id="btnNext" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chevron-right"></i></button>
-            </div>
           </div>
 
           <div id="flashEmpty" class="alert alert-warning d-none mb-0" data-i18n="flashcards_empty">No data yet. Click Import/Manage to load JSON.</div>
@@ -139,8 +139,12 @@
               <div class="swiper-scrollbar"></div>
             </div>
 
-            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-              <div class="small-muted"><span data-i18n="card_label">Card</span> <b id="cardIndex">0</b>/<b id="cardCount">0</b></div>
+            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between flash-nav-row">
+              <div class="d-flex flex-wrap gap-2 align-items-center nav-inline">
+                <button id="btnPrev" class="btn btn-outline-secondary btn-sm nav-btn"><i class="bi bi-chevron-left"></i></button>
+                <div class="small-muted nav-counter"><span data-i18n="card_label">Card</span> <b id="cardIndex">0</b>/<b id="cardCount">0</b></div>
+                <button id="btnNext" class="btn btn-outline-secondary btn-sm nav-btn"><i class="bi bi-chevron-right"></i></button>
+              </div>
               <div class="d-flex flex-wrap gap-2">
                 <button id="btnMarkLearning" class="btn btn-outline-warning"><i class="bi bi-book"></i> <span data-i18n="btn_learning">Learning</span></button>
                 <button id="btnMarkKnown" class="btn btn-success"><i class="bi bi-check2"></i> <span data-i18n="btn_known">Known</span></button>

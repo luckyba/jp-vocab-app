@@ -147,6 +147,26 @@
       border-top: 1px dashed rgba(0,0,0,.10);
       display:flex; justify-content:space-between; align-items:center;
     }
+    .flash-nav-row{ margin-top: 4px; }
+    .nav-inline{ align-items: center; }
+    .nav-counter{ min-width: 110px; text-align: center; }
+    .nav-btn{
+      border-color: rgba(13,110,253,.25);
+      background: rgba(13,110,253,.06);
+    }
+    .nav-btn:hover{ background: rgba(13,110,253,.12); }
+
+    @media (max-width: 576px){
+      .flash-nav-row{ gap: .6rem; }
+      .flash-nav-row > .d-flex{ width: 100%; justify-content: space-between; }
+      .nav-counter{ min-width: 96px; }
+      .nav-btn{
+        padding: .7rem 1.1rem;
+        font-size: 1.05rem;
+        border-width: 2px;
+        box-shadow: 0 8px 18px rgba(13,110,253,.12);
+      }
+    }
 
     /* Swiper layout */
     .swiper{

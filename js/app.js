@@ -2,6 +2,7 @@
      * i18n
      ***********************/
     const STORAGE_KEY_LANG = "jp_vocab_app_lang";
+    const STORAGE_KEY_AUTO_SPEAK = "jp_vocab_app_auto_speak";
     const DEFAULT_LANG = document.documentElement.getAttribute("lang") || "en";
     let i18n = {};
 
@@ -90,7 +91,8 @@
       progress: loadFromStorage(STORAGE_KEY_PROGRESS, {}),
       score: { right: 0, wrong: 0 },
       currentQuiz: null,
-      swiper: null
+      swiper: null,
+      autoSpeak: loadFromStorage(STORAGE_KEY_AUTO_SPEAK, false)
     };
 
     /***********************
@@ -282,7 +284,8 @@
 
       // export
       btnExportData: document.getElementById("btnExportData"),
-      btnExportAll: document.getElementById("btnExportAll")
+      btnExportAll: document.getElementById("btnExportAll"),
+      autoSpeakToggle: document.getElementById("autoSpeakToggle")
     };
 
     /***********************
@@ -458,6 +461,10 @@
         updateCardCounter();
         resetFlipOnActive();
         renderCardFooterButtons();
+        if (state.autoSpeak) {
+          const it = getActiveItem();
+          if (it) speakAuto(getFrontText(it));
+        }
       });
 
       updateCardCounter();
@@ -560,6 +567,8 @@
 
       if (state.quizType === "mc") buildMCOptions(mode, answerItem, items);
       else { el.typeInput.value = ""; el.typeFeedback.innerHTML = ""; el.typeInput.focus(); }
+
+      if (state.autoSpeak) speakAuto(prompt);
     }
 
     function buildMCOptions(mode, answerItem, items) {
@@ -674,6 +683,15 @@
       u.rate = 0.95;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
+    }
+    function speakAuto(text) {
+      if (!text) return;
+      const isJP = /[\u3040-\u30ff\u4e00-\u9faf]/.test(text);
+      speak(text, isJP ? "ja-JP" : "vi-VN");
+    }
+    function getFrontText(it) {
+      const emptyValue = t("empty_value", "-");
+      return state.mode === "jp_to_vi" ? (it.jp || emptyValue) : (it.vi || emptyValue);
     }
 
     /***********************
@@ -834,8 +852,7 @@
     el.btnQuizSpeak.addEventListener("click", () => {
       const q = state.currentQuiz;
       if (!q) return;
-      const isJP = /[\u3040-\u30ff\u4e00-\u9faf]/.test(q.prompt);
-      speak(q.prompt, isJP ? "ja-JP" : "vi-VN");
+      speakAuto(q.prompt);
     });
 
     el.btnNewQuestion.addEventListener("click", () => makeNewQuestion());
@@ -947,6 +964,13 @@
           const label = el.btnCopyAiPrompt.querySelector("[data-i18n]");
           if (label) label.textContent = originalLabel || t("btn_copy_prompt", "Copy");
         }, 1500);
+      });
+    }
+    if (el.autoSpeakToggle) {
+      el.autoSpeakToggle.checked = !!state.autoSpeak;
+      el.autoSpeakToggle.addEventListener("change", () => {
+        state.autoSpeak = el.autoSpeakToggle.checked;
+        saveToStorage(STORAGE_KEY_AUTO_SPEAK, state.autoSpeak);
       });
     }
 

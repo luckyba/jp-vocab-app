@@ -50,6 +50,9 @@
         <button id="btnResetProgress" class="btn btn-outline-danger btn-sm">
           <i class="bi bi-arrow-counterclockwise"></i> <span data-i18n="btn_reset_progress">Reset progress</span>
         </button>
+        <button id="btnHelperToggle" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#helperModal" data-i18n-aria="btn_help" data-i18n-title="btn_help">
+          <i class="bi bi-question-circle"></i>
+        </button>
         <select id="langSelect" class="form-select form-select-sm w-auto">
           <option value="en" data-i18n="lang_en">English</option>
           <option value="vi" data-i18n="lang_vi">Vietnamese</option>
@@ -110,6 +113,11 @@
               <div class="form-check form-switch d-flex align-items-center gap-2 me-1">
                 <input class="form-check-input" type="checkbox" role="switch" id="autoSpeakToggle">
                 <label class="form-check-label small text-secondary" for="autoSpeakToggle" data-i18n="label_auto_speak">Auto speak</label>
+              </div>
+              <div id="audioControlsWrap" class="d-flex flex-wrap align-items-center gap-2 audio-controls">
+                <label for="voiceSelect" class="small text-secondary mb-0" data-i18n="label_voice">Voice</label>
+                <select id="voiceSelect" class="form-select form-select-sm w-auto"></select>
+                <span id="voiceStatus" class="small text-secondary"></span>
               </div>
               <button id="btnFlash" class="btn btn-primary">
                 <i class="bi bi-cards"></i> <span data-i18n="btn_flashcards">Flashcards</span>
@@ -318,6 +326,52 @@
           <button id="btnApplyJSON" type="button" class="btn btn-primary">
             <i class="bi bi-check2-circle"></i> <span data-i18n="btn_import_apply">Import (Add data)</span>
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Helper -->
+  <div class="modal fade" id="helperModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content helper-modal" style="border-radius: 18px;">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title" data-i18n="helper_title">Quick guide</h5>
+            <div class="small text-secondary" data-i18n="helper_subtitle">Tips to get started faster.</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2 small">
+            <div class="col-12 col-md-6">
+              <div class="d-flex gap-2 align-items-start helper-item">
+                <i class="bi bi-braces text-primary"></i>
+                <div data-i18n="helper_tip_import">Import JSON via Import/Manage to add decks.</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="d-flex gap-2 align-items-start helper-item">
+                <i class="bi bi-cards text-primary"></i>
+                <div data-i18n="helper_tip_flash">Tap a card or press Space to flip; mark Known/Learning.</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="d-flex gap-2 align-items-start helper-item">
+                <i class="bi bi-ui-checks text-primary"></i>
+                <div data-i18n="helper_tip_quiz">Pick Quiz type, then use New question or Enter to submit.</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="d-flex gap-2 align-items-start helper-item">
+                <i class="bi bi-volume-up text-primary"></i>
+                <div data-i18n="helper_tip_audio">Choose a voice, then use Listen or Auto speak.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-i18n="modal_close">Close</button>
         </div>
       </div>
     </div>

@@ -1,10 +1,11 @@
     /***********************
      * i18n
      ***********************/
-    const STORAGE_KEY_LANG = "jp_vocab_app_lang";
-    const STORAGE_KEY_AUTO_SPEAK = "jp_vocab_app_auto_speak";
-    const STORAGE_KEY_VISIT_LAST = "jp_vocab_app_visit_last";
-    const STORAGE_KEY_VISIT_COUNT = "jp_vocab_app_visit_count";
+const STORAGE_KEY_LANG = "jp_vocab_app_lang";
+const STORAGE_KEY_AUTO_SPEAK = "jp_vocab_app_auto_speak";
+const STORAGE_KEY_VOICE = "jp_vocab_app_voice";
+const STORAGE_KEY_VISIT_LAST = "jp_vocab_app_visit_last";
+const STORAGE_KEY_VISIT_COUNT = "jp_vocab_app_visit_count";
     const DEFAULT_LANG = document.documentElement.getAttribute("lang") || "en";
     let i18n = {};
 
@@ -46,14 +47,24 @@
         const fallback = elm.textContent || "";
         elm.textContent = t(key, fallback);
       });
-      document.querySelectorAll("[data-i18n-placeholder]").forEach(elm => {
-        const key = elm.getAttribute("data-i18n-placeholder");
-        const fallback = elm.getAttribute("placeholder") || "";
-        elm.setAttribute("placeholder", t(key, fallback));
-      });
-      if (lang) {
-        document.documentElement.setAttribute("lang", lang);
-        const select = document.getElementById("langSelect");
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(elm => {
+    const key = elm.getAttribute("data-i18n-placeholder");
+    const fallback = elm.getAttribute("placeholder") || "";
+    elm.setAttribute("placeholder", t(key, fallback));
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach(elm => {
+    const key = elm.getAttribute("data-i18n-aria");
+    const fallback = elm.getAttribute("aria-label") || "";
+    elm.setAttribute("aria-label", t(key, fallback));
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(elm => {
+    const key = elm.getAttribute("data-i18n-title");
+    const fallback = elm.getAttribute("title") || "";
+    elm.setAttribute("title", t(key, fallback));
+  });
+  if (lang) {
+    document.documentElement.setAttribute("lang", lang);
+    const select = document.getElementById("langSelect");
         if (select) select.value = lang;
       }
       updateAIPrompt();
@@ -91,13 +102,15 @@
       filteredQuizItems: [],
       mode: "jp_to_vi",
       quizType: "mc",
-      progress: loadFromStorage(STORAGE_KEY_PROGRESS, {}),
-      score: { right: 0, wrong: 0 },
-      currentQuiz: null,
-      swiper: null,
-      autoSpeak: loadFromStorage(STORAGE_KEY_AUTO_SPEAK, false),
-      flashFilter: "all"
-    };
+  progress: loadFromStorage(STORAGE_KEY_PROGRESS, {}),
+  score: { right: 0, wrong: 0 },
+  currentQuiz: null,
+  swiper: null,
+  autoSpeak: loadFromStorage(STORAGE_KEY_AUTO_SPEAK, false),
+  voiceName: loadFromStorage(STORAGE_KEY_VOICE, ""),
+  voices: [],
+  flashFilter: "all"
+};
 
     /***********************
      * Data normalization (flexible but clean)
@@ -243,7 +256,8 @@
       btnFlash: document.getElementById("btnFlash"),
       btnQuiz: document.getElementById("btnQuiz"),
       btnShuffle: document.getElementById("btnShuffle"),
-      btnResetProgress: document.getElementById("btnResetProgress"),
+  btnResetProgress: document.getElementById("btnResetProgress"),
+  btnHelperToggle: document.getElementById("btnHelperToggle"),
 
       flashEmpty: document.getElementById("flashEmpty"),
       flashArea: document.getElementById("flashArea"),
@@ -292,9 +306,12 @@
       // export
       btnExportData: document.getElementById("btnExportData"),
       btnExportAll: document.getElementById("btnExportAll"),
-      autoSpeakToggle: document.getElementById("autoSpeakToggle"),
-      visitCount: document.getElementById("visitCount")
-    };
+  autoSpeakToggle: document.getElementById("autoSpeakToggle"),
+  visitCount: document.getElementById("visitCount"),
+  voiceSelect: document.getElementById("voiceSelect"),
+  voiceStatus: document.getElementById("voiceStatus"),
+  audioControlsWrap: document.getElementById("audioControlsWrap")
+};
 
     /***********************
      * Render
@@ -699,23 +716,90 @@
     /***********************
      * TTS
      ***********************/
-    function speak(text, lang = "ja-JP") {
-      if (!("speechSynthesis" in window)) return;
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = lang;
-      u.rate = 0.95;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    }
+function speak(text, lang = "ja-JP") {
+  if (!("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang;
+  u.rate = 0.95;
+  const voice = pickVoice(lang);
+  if (voice) u.voice = voice;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
     function speakAuto(text) {
       if (!text) return;
       const isJP = /[\u3040-\u30ff\u4e00-\u9faf]/.test(text);
       speak(text, isJP ? "ja-JP" : "vi-VN");
     }
-    function getFrontText(it) {
-      const emptyValue = t("empty_value", "-");
-      return state.mode === "jp_to_vi" ? (it.jp || emptyValue) : (it.vi || emptyValue);
+function getFrontText(it) {
+  const emptyValue = t("empty_value", "-");
+  return state.mode === "jp_to_vi" ? (it.jp || emptyValue) : (it.vi || emptyValue);
+}
+function getSpeechVoices() {
+  if (!("speechSynthesis" in window)) return [];
+  return window.speechSynthesis.getVoices() || [];
+}
+function updateAudioAvailability(hasVoices) {
+  const disabled = !hasVoices;
+  if (el.btnSpeak) el.btnSpeak.disabled = disabled;
+  if (el.btnQuizSpeak) el.btnQuizSpeak.disabled = disabled;
+  if (el.autoSpeakToggle) {
+    el.autoSpeakToggle.disabled = disabled;
+    if (disabled && state.autoSpeak) {
+      state.autoSpeak = false;
+      el.autoSpeakToggle.checked = false;
+      saveToStorage(STORAGE_KEY_AUTO_SPEAK, false);
     }
+  }
+  if (el.voiceSelect) el.voiceSelect.disabled = disabled;
+  if (el.audioControlsWrap) el.audioControlsWrap.classList.toggle("audio-disabled", disabled);
+  if (el.voiceStatus) el.voiceStatus.textContent = disabled ? t("voice_unavailable", "No voices available") : "";
+}
+function refreshVoices() {
+  if (!el.voiceSelect) return;
+  const voices = getSpeechVoices();
+  const allowed = new Set(["ja", "en", "vi"]);
+  const filtered = voices.filter(v => allowed.has(String(v.lang || "").split("-")[0].toLowerCase()));
+  state.voices = filtered;
+  el.voiceSelect.innerHTML = "";
+  if (!filtered.length) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = t("voice_unavailable", "No voices available");
+    el.voiceSelect.appendChild(opt);
+    updateAudioAvailability(false);
+    return;
+  }
+  updateAudioAvailability(true);
+  filtered.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.name;
+    opt.textContent = `${v.name} (${v.lang || "unknown"})`;
+    el.voiceSelect.appendChild(opt);
+  });
+  let selected = state.voiceName;
+  if (!selected || !filtered.some(v => v.name === selected)) {
+    const jpVoice = filtered.find(v => String(v.lang || "").toLowerCase().startsWith("ja"));
+    selected = jpVoice?.name || filtered[0].name;
+  }
+  state.voiceName = selected;
+  el.voiceSelect.value = selected;
+  saveToStorage(STORAGE_KEY_VOICE, selected);
+}
+function pickVoice(lang) {
+  const voices = state.voices || [];
+  if (!voices.length) return null;
+  if (state.voiceName) {
+    const chosen = voices.find(v => v.name === state.voiceName);
+    if (chosen) return chosen;
+  }
+  const lower = String(lang || "").toLowerCase();
+  const exact = voices.find(v => String(v.lang || "").toLowerCase() === lower);
+  if (exact) return exact;
+  const short = lower.split("-")[0];
+  const partial = voices.find(v => String(v.lang || "").toLowerCase().startsWith(short));
+  return partial || voices[0] || null;
+}
 
     /***********************
      * Utils
@@ -910,15 +994,16 @@
       renderQuizArea();
     });
 
-    if (el.langSelect) {
-      el.langSelect.addEventListener("change", async () => {
-        await loadI18n(el.langSelect.value);
-        renderDeckSelect();
-        renderStats();
-        renderFlashcards();
-        renderQuizArea();
-      });
-    }
+  if (el.langSelect) {
+    el.langSelect.addEventListener("change", async () => {
+      await loadI18n(el.langSelect.value);
+      renderDeckSelect();
+      renderStats();
+      renderFlashcards();
+      renderQuizArea();
+      refreshVoices();
+    });
+  }
 
     el.btnPrev.addEventListener("click", () => state.swiper?.slidePrev());
     el.btnNext.addEventListener("click", () => state.swiper?.slideNext());
@@ -965,15 +1050,15 @@
       renderQuizArea();
     });
 
-    el.btnResetProgress.addEventListener("click", () => {
-      const deck = getDeck();
-      if (!deck) return;
-      if (!confirm(t("confirm_reset_progress", "Reset progress (Known/Learning) for the current deck?"))) return;
-      state.progress[deck.id] = { known: [], learning: [] };
-      saveToStorage(STORAGE_KEY_PROGRESS, state.progress);
-      renderStats();
-      renderCardFooterButtons();
-    });
+el.btnResetProgress.addEventListener("click", () => {
+  const deck = getDeck();
+  if (!deck) return;
+  if (!confirm(t("confirm_reset_progress", "Reset progress (Known/Learning) for the current deck?"))) return;
+  state.progress[deck.id] = { known: [], learning: [] };
+  saveToStorage(STORAGE_KEY_PROGRESS, state.progress);
+  renderStats();
+  renderCardFooterButtons();
+});
 
     // Keyboard shortcuts
     window.addEventListener("keydown", (e) => {
@@ -1074,13 +1159,19 @@
         }, 1500);
       });
     }
-    if (el.autoSpeakToggle) {
-      el.autoSpeakToggle.checked = !!state.autoSpeak;
-      el.autoSpeakToggle.addEventListener("change", () => {
-        state.autoSpeak = el.autoSpeakToggle.checked;
-        saveToStorage(STORAGE_KEY_AUTO_SPEAK, state.autoSpeak);
-      });
-    }
+  if (el.autoSpeakToggle) {
+    el.autoSpeakToggle.checked = !!state.autoSpeak;
+    el.autoSpeakToggle.addEventListener("change", () => {
+      state.autoSpeak = el.autoSpeakToggle.checked;
+      saveToStorage(STORAGE_KEY_AUTO_SPEAK, state.autoSpeak);
+    });
+  }
+  if (el.voiceSelect) {
+    el.voiceSelect.addEventListener("change", () => {
+      state.voiceName = el.voiceSelect.value || "";
+      saveToStorage(STORAGE_KEY_VOICE, state.voiceName);
+    });
+  }
 
     // Delete selected deck
     el.btnDeleteSelectedDeck.addEventListener("click", () => {
@@ -1189,11 +1280,17 @@
     /***********************
      * Start
      ***********************/
-    async function startApp() {
-      await loadI18n();
-      loadInitialData();
-      updateAIPrompt();
-      loadVisitCount();
-    }
+async function startApp() {
+  await loadI18n();
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.onvoiceschanged = refreshVoices;
+    refreshVoices();
+  } else {
+    updateAudioAvailability(false);
+  }
+  loadInitialData();
+  updateAIPrompt();
+  loadVisitCount();
+}
 
     startApp();

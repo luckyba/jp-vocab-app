@@ -161,6 +161,24 @@
     }
     .nav-btn:hover{ background: rgba(13,110,253,.12); }
 
+    .audio-controls .form-select{ min-width: 180px; width: auto; flex: 0 1 auto; }
+    .audio-disabled{ opacity: .6; }
+
+    .helper-modal{
+      background: linear-gradient(180deg, rgba(13,110,253,.16) 0%, rgba(255,255,255,.8) 65%);
+      border: 1px dashed rgba(0,0,0,.12);
+    }
+    .modal-backdrop.show{
+      opacity: .6;
+      background: #0b2b4a;
+    }
+    .helper-item{
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,.06);
+      padding: .55rem .7rem;
+      background: rgba(255,255,255,.75);
+    }
+
     @media (max-width: 576px){
       .flash-nav-row{ gap: .6rem; }
       .flash-nav-row > .d-flex{ width: 100%; justify-content: space-between; }
@@ -171,6 +189,8 @@
         border-width: 2px;
         box-shadow: 0 8px 18px rgba(13,110,253,.12);
       }
+      .audio-controls{ width: 100%; justify-content: flex-start; }
+      .audio-controls .form-select{ max-width: 220px; }
     }
 
     /* Swiper layout */
